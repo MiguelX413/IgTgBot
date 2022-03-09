@@ -153,7 +153,8 @@ def caption_gen(
 
     output += f"{created_time:%Y-%m-%d %H:%M:%S}" + "\n"
 
-    output += post_caption
+    if post_caption is not None:
+        output += post_caption
 
     return output
 
