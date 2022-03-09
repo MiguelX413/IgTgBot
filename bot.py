@@ -4,8 +4,6 @@ import os
 import instaloader
 from uuid import uuid4
 
-authorized_users = {}
-
 from telegram import (
     InlineQueryResultArticle,
     InlineQueryResultPhoto,
@@ -31,61 +29,82 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Runs TG bot")
     parser.add_argument(
+        "-t",
+        "--token",
+        action="store",
+        default=os.environ["TG_TOKEN"] if "TG_TOKEN" in os.environ else None,
+        type=str,
+        dest="token",
+        help="Telegram Token for the bot",
+    )
+    parser.add_argument(
+        "--uid",
+        action="append",
+        dest="uid",
+        type=int,
+        help="Telegram User IDs authorized to use this bot",
+    )
+    parser.add_argument(
         "-d",
         "--debug",
         action="store_true",
-        default=False,
         help="Enabled Debugging mode",
     )
-    if (sys.version_info[0] >= 3) and (sys.version_info[1] >= 9):
-        parser.add_argument(
-            "-r",
-            "--rich",
-            action=argparse.BooleanOptionalAction,
-            default=True,
-            help="Enables rich output",
-        )
-    else:
-        parser.add_argument(
-            "-r",
-            "--rich",
-            action="store_true",
-            default=True,
-            help="Enables rich output",
-        )
-        parser.add_argument(
-            "--no-rich",
-            action="store_false",
-            dest="rich",
-            help="Disables rich output",
-        )
-    do_rich = parser.parse_args().rich
-    debug = parser.parse_args().debug
+    parser.add_argument(
+        "--no-rich",
+        action="store_false",
+        dest="rich",
+        help="Disables rich output",
+    )
+    parser.add_argument(
+        "--no-login",
+        action="store_false",
+        dest="login",
+        help="Runs without an Instagram account",
+    )
+    parser.add_argument(
+        "--log-file",
+        action="store_true",
+        dest="logfile",
+        help="Output to log file",
+    )
 
-    if do_rich:
+    do_rich = True
+    if parser.parse_args().rich:
         try:
             import rich
             from rich.progress import track, Progress
             from rich.logging import RichHandler
         except ModuleNotFoundError:
             do_rich = False
+    else:
+        do_rich = False
 
-    logging_args = {
-        "level": logging.DEBUG if debug else logging.INFO,
-        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    }
     if do_rich:
-        logging_args["handlers"] = [RichHandler(rich_tracebacks=True)]
-    logging.basicConfig(**logging_args)
+        logging_handlers = [RichHandler(rich_tracebacks=True)]
+    else:
+        logging_handlers = [logging.StreamHandler()]
+
+    if parser.parse_args().logfile:
+        logging_handlers.append(logging.FileHandler("IgTgBot.log"))
+
+    logging.basicConfig(level=logging.DEBUG if parser.parse_args().debug else logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", handlers=logging_handlers)
+
+    if parser.parse_args().uid is None:
+        authorized_users = set()
+        logging.info("No authorized users specified")
+    else:
+        authorized_users = set(int(uid) for uid in parser.parse_args().uid)
+        logging.info("Authorized users: " + str(authorized_users))
 
     L = instaloader.Instaloader()
-#    IG_user = input("Please type your Instagram username: ")
-#    try:
-#        L.load_session_from_file(username=IG_user)
-#    except FileNotFoundError:
-#        L.interactive_login(IG_user)
-#    L.save_session_to_file()
-
+    if parser.parse_args().login is not False:
+        IG_user = input("Please type your Instagram username: ")
+        try:
+            L.load_session_from_file(username=IG_user)
+        except FileNotFoundError:
+            L.interactive_login(IG_user)
+        L.save_session_to_file()
 
 # def parse_for_shortcodes(text: str) -> list:
 #    return
@@ -96,14 +115,13 @@ def start(update: Update, _: CallbackContext) -> None:
 
 
 def inlinequery(update: Update, context: CallbackContext) -> None:
-    """Handle the inline query."""
-    print(update.inline_query)
+    logging.info(update.inline_query)
     if update.inline_query.from_user.id in authorized_users:
         results = []
-        query = update.inline_query.query
-        post = instaloader.Post.from_shortcode(L.context, query)
-        print(post.typename)
-        print(post.mediacount)
+        shortcode = update.inline_query.query
+        post = instaloader.Post.from_shortcode(L.context, shortcode)
+        logging.info(post.typename)
+        logging.info(post.mediacount)
         if post.typename == "GraphSidecar":
             counter = 0
             for x in post.get_sidecar_nodes():
@@ -117,7 +135,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                             photo_url=x.display_url,
                             thumb_url=x.display_url,
                             caption="https://instagram.com/p/"
-                            + query
+                            + shortcode
                             + " "
                             + str(counter)
                             + "/"
@@ -150,8 +168,9 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                             description="description",
                             video_url=x.video_url,
                             thumb_url=x.video_url,
+                            mime_type="video/mp4",
                             caption="https://instagram.com/p/"
-                            + query
+                            + shortcode
                             + " "
                             + str(counter)
                             + "/"
@@ -185,7 +204,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                     photo_url=post.url,
                     thumb_url=post.url,
                     caption="https://instagram.com/p/"
-                    + query
+                    + shortcode
                     + (("\n" + post.caption) if post.caption else (""),)[0],
                 )
             )
@@ -201,7 +220,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                 )
             )
         elif post.typename == "GraphVideo":
-            print(post.video_url)
+            logging.info(post.video_url)
             results.append(
                 InlineQueryResultVideo(
                     id=str(uuid4()),
@@ -210,7 +229,9 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                     video_url=post.video_url,
                     thumb_url=post.video_url,
                     mime_type="video/mp4",
-                    caption="https://instagram.com/p/" + query + ("\n" + post.caption)
+                    caption="https://instagram.com/p/"
+                    + shortcode
+                    + ("\n" + post.caption)
                     if post.caption
                     else "",
                 )
@@ -243,76 +264,68 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
 
 def echo(update: Update, context: CallbackContext) -> None:
     """Echo the user message."""
-    print(str(update.message))
+    logging.info(str(update.message))
     ig_post = True
     if update.message.from_user.id in authorized_users:
+        shortcode = update.message.text
         if ig_post:
-            post = instaloader.Post.from_shortcode(L.context, update.message.text)
-            print(str(post))
+            post = instaloader.Post.from_shortcode(L.context, shortcode)
+            logging.info(str(post))
+            arguments = {
+                "caption": "https://instagram.com/p/"
+                + shortcode
+                + "/"
+                + (("\n" + post.caption) if post.caption else (""),)[0],
+                "quote": True,
+            }
             if post.typename == "GraphImage":
-                print(post.url)
-                update.message.reply_photo(
-                    photo=post.url,
-                    caption="https://instagram.com/p/"
-                    + update.message.text
-                    + (("\n" + post.caption) if post.caption else (""),)[0],
-                    quote=True,
-                )
+                update.message.reply_photo(photo=post.url, **arguments)
             elif post.typename == "GraphVideo":
-                print(post.url)
-                update.message.reply_video(
-                    video=post.video_url,
-                    caption="https://instagram.com/p/"
-                    + update.message.text
-                    + (("\n" + post.caption) if post.caption else (""),)[0],
-                    quote=True,
-                )
+                update.message.reply_video(video=post.video_url, **arguments)
             elif post.typename == "GraphSidecar":
                 counter = 0
                 media_group = []
                 for x in post.get_sidecar_nodes():
                     counter += 1
+                    caption = (
+                        "https://instagram.com/p/"
+                        + shortcode
+                        + "/"
+                        + " "
+                        + str(counter)
+                        + "/"
+                        + str(post.mediacount)
+                        + ("\n" + post.caption)
+                        if post.caption
+                        else ""
+                    )
                     if x.is_video is not True:
                         media_group.append(
                             InputMediaPhoto(
                                 media=x.display_url,
-                                caption="https://instagram.com/p/"
-                                + update.message.text
-                                + " "
-                                + str(counter)
-                                + "/"
-                                + str(post.mediacount)
-                                + ("\n" + post.caption)
-                                if post.caption
-                                else "",
+                                caption=caption,
                             )
                         )
                     else:
                         media_group.append(
                             InputMediaVideo(
                                 media=x.video_url,
-                                caption="https://instagram.com/p/"
-                                + update.message.text
-                                + " "
-                                + str(counter)
-                                + "/"
-                                + str(post.mediacount)
-                                + ("\n" + post.caption)
-                                if post.caption
-                                else "",
+                                caption=caption,
                             )
                         )
                 for y in media_group:
-                    print(y)
-                update.message.reply_media_group(media=media_group, quote=True)
+                    logging.info(y)
+                update.message.reply_media_group(
+                    media=media_group,
+                    quote=True,
+                )
         else:
             update.message.reply_text("Not an Instagram post", quote=True)
     else:
         update.message.reply_text("Unauthorized user", quote=True)
 
 
-def main() -> None:
-    token = os.environ["TG_TOKEN"]
+def main(token: str) -> None:
     updater = Updater(token, use_context=True)
     dispatcher = updater.dispatcher
 
@@ -327,4 +340,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+
+    main(parser.parse_args().token)
