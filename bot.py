@@ -88,7 +88,11 @@ if __name__ == "__main__":
     if parser.parse_args().logfile:
         logging_handlers.append(logging.FileHandler("IgTgBot.log"))
 
-    logging.basicConfig(level=logging.DEBUG if parser.parse_args().debug else logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", handlers=logging_handlers)
+    logging.basicConfig(
+        level=logging.DEBUG if parser.parse_args().debug else logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=logging_handlers,
+    )
 
     if parser.parse_args().uid is None:
         authorized_users = set()
