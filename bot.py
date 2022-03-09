@@ -4,6 +4,9 @@ import os
 import instaloader
 from uuid import uuid4
 
+from datetime import datetime
+
+import telegram
 from telegram import (
     InlineQueryResultArticle,
     InlineQueryResultPhoto,
@@ -114,11 +117,62 @@ if __name__ == "__main__":
 #    return
 
 
+def caption_gen(
+    owner_username: str,
+    shortcode: str,
+    likes: int,
+    comments: int,
+    created_time: datetime,
+    post_caption: str,
+    owner_id: int = None,
+    counter: int = None,
+    media_count: int = None,
+    media_url: str = None,
+) -> str:
+    output = ""
+
+    if media_url is not None:
+        output += media_url + "\n"
+
+    output += (
+        "@"
+        + owner_username
+        + ((" (" + str(owner_id) + ")") if owner_id is not None else "")
+        + ": "
+        + "https://instagram.com/p/"
+        + shortcode
+        + "/"
+        + (
+            (" " + str(counter) + "/" + str(media_count) + "\n")
+            if counter is not None and media_count is not None
+            else "\n"
+        )
+    )
+
+    output += "❤️" + str(likes) + " 💬" + str(comments) + "\n"
+
+    output += f"{created_time:%Y-%m-%d %H:%M:%S}" + "\n"
+
+    output += post_caption
+
+    return output
+
+
+def owner_url_entity(offset: int, owner_username: str) -> telegram.MessageEntity:
+    return telegram.MessageEntity(
+        type="text_link",
+        offset=offset,
+        length=len("@" + owner_username),
+        url="https://instagram.com/" + owner_username + "/",
+    )
+
+
 def start(update: Update, _: CallbackContext) -> None:
     update.message.reply_text("Hi, lmao")
 
 
 def inlinequery(update: Update, context: CallbackContext) -> None:
+    """Produces results for Inline Queries"""
     logging.info(update.inline_query)
     if update.inline_query.from_user.id in authorized_users:
         results = []
@@ -134,123 +188,181 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                     results.append(
                         InlineQueryResultPhoto(
                             id=str(uuid4()),
+                            photo_url=x.display_url,
+                            thumb_url=x.display_url,
                             title="",
-                            description="description",
-                            photo_url=x.display_url,
-                            thumb_url=x.display_url,
-                            caption="https://instagram.com/p/"
-                            + shortcode
-                            + " "
-                            + str(counter)
-                            + "/"
-                            + str(post.mediacount)
-                            + ("\n" + post.caption)
-                            if post.caption
-                            else "",
-                        )
-                    )
-                    results.append(
-                        InlineQueryResultArticle(
-                            id=str(uuid4()),
-                            title="URL",
-                            description="URL",
-                            photo_url=x.display_url,
-                            thumb_url=x.display_url,
-                            caption=x.display_url + ("\n" + post.caption)
-                            if post.caption
-                            else "",
-                            input_message_content=InputTextMessageContent(
-                                str(x.display_url)
+                            caption="Media\n"
+                            + caption_gen(
+                                post.owner_username,
+                                shortcode,
+                                post.likes,
+                                post.comments,
+                                post.date_utc,
+                                post.caption,
+                                post.owner_id,
+                                counter=counter,
+                                media_count=post.mediacount,
                             ),
+                            caption_entities=[
+                                telegram.MessageEntity(
+                                    type="text_link",
+                                    offset=0,
+                                    length=5,
+                                    url=x.display_url,
+                                ),
+                                owner_url_entity(6, post.owner_username),
+                            ],
                         )
                     )
                 else:
                     results.append(
                         InlineQueryResultVideo(
                             id=str(uuid4()),
-                            title="",
-                            description="description",
                             video_url=x.video_url,
-                            thumb_url=x.video_url,
                             mime_type="video/mp4",
-                            caption="https://instagram.com/p/"
-                            + shortcode
-                            + " "
-                            + str(counter)
-                            + "/"
-                            + str(post.mediacount)
-                            + ("\n" + post.caption)
-                            if post.caption
-                            else "",
-                        )
-                    )
-                    results.append(
-                        InlineQueryResultArticle(
-                            id=str(uuid4()),
-                            title="URL",
-                            description="URL",
-                            photo_url=x.video_url,
-                            thumb_url=x.video_url,
-                            caption=x.video_url + ("\n" + post.caption)
-                            if post.caption
-                            else "",
-                            input_message_content=InputTextMessageContent(
-                                str(x.video_url)
+                            thumb_url=x.display_url,
+                            title="Video",
+                            caption="Media\n"
+                            + caption_gen(
+                                post.owner_username,
+                                shortcode,
+                                post.likes,
+                                post.comments,
+                                post.date_utc,
+                                post.caption,
+                                post.owner_id,
+                                counter=counter,
+                                media_count=post.mediacount,
                             ),
+                            caption_entities=[
+                                telegram.MessageEntity(
+                                    type="text_link",
+                                    offset=0,
+                                    length=5,
+                                    url=x.video_url,
+                                ),
+                                owner_url_entity(6, post.owner_username),
+                            ],
                         )
                     )
-        elif post.typename == "GraphImage":
-            results.append(
-                InlineQueryResultPhoto(
-                    id=str(uuid4()),
-                    title="",
-                    description="description",
-                    photo_url=post.url,
-                    thumb_url=post.url,
-                    caption="https://instagram.com/p/"
-                    + shortcode
-                    + (("\n" + post.caption) if post.caption else (""),)[0],
+                results.append(
+                    InlineQueryResultArticle(
+                        id=str(uuid4()),
+                        title="URL",
+                        input_message_content=InputTextMessageContent(
+                            "Media\n"
+                            + caption_gen(
+                                post.owner_username,
+                                shortcode,
+                                post.likes,
+                                post.comments,
+                                post.date_utc,
+                                post.caption,
+                                post.owner_id,
+                                counter=counter,
+                                media_count=post.mediacount,
+                                # mediaurl=x.video_url if x.is_video else x.display_url,
+                            ),
+                            entities=[
+                                telegram.MessageEntity(
+                                    type="text_link",
+                                    offset=0,
+                                    length=5,
+                                    url=x.video_url if x.is_video else x.display_url,
+                                ),
+                                owner_url_entity(6, post.owner_username),
+                            ],
+                        ),
+                        thumb_url=x.display_url,
+                    )
                 )
-            )
+        elif post.typename == "GraphImage" or post.typename == "GraphVideo":
+            if post.typename == "Graphimage":
+                results.append(
+                    InlineQueryResultPhoto(
+                        id=str(uuid4()),
+                        title="",
+                        photo_url=post.url,
+                        thumb_url=post.url,
+                        caption="Media\n"
+                        + caption_gen(
+                            post.owner_username,
+                            shortcode,
+                            post.likes,
+                            post.comments,
+                            post.date_utc,
+                            post.caption,
+                            owner_id=post.owner_id,
+                        ),
+                        caption_entities=[
+                            telegram.MessageEntity(
+                                type="text_link",
+                                offset=0,
+                                length=5,
+                                url=post.url,
+                            ),
+                            owner_url_entity(6, post.owner_username),
+                        ],
+                    )
+                )
+            elif post.typename == "GraphVideo":
+                results.append(
+                    InlineQueryResultVideo(
+                        id=str(uuid4()),
+                        title="Video",
+                        video_url=post.video_url,
+                        thumb_url=post.url,
+                        mime_type="video/mp4",
+                        caption="Media\n"
+                        + caption_gen(
+                            post.owner_username,
+                            shortcode,
+                            post.likes,
+                            post.comments,
+                            post.date_utc,
+                            post.caption,
+                            owner_id=post.owner_id,
+                        ),
+                        caption_entities=[
+                            telegram.MessageEntity(
+                                type="text_link",
+                                offset=0,
+                                length=5,
+                                url=post.video_url,
+                            ),
+                            owner_url_entity(6, post.owner_username),
+                        ],
+                    )
+                )
             results.append(
                 InlineQueryResultArticle(
                     id=str(uuid4()),
                     title="URL",
-                    description="URL",
-                    photo_url=post.url,
+                    input_message_content=InputTextMessageContent(
+                        "Media\n"
+                        + caption_gen(
+                            post.owner_username,
+                            shortcode,
+                            post.likes,
+                            post.comments,
+                            post.date_utc,
+                            post.caption,
+                            owner_id=post.owner_id,
+                            # mediaurl=post.video_url if post.typename == "GraphVideo" else post.url,
+                        ),
+                        entities=[
+                            telegram.MessageEntity(
+                                type="text_link",
+                                offset=0,
+                                length=5,
+                                url=post.video_url
+                                if post.typename == "GraphVideo"
+                                else post.url,
+                            ),
+                            owner_url_entity(6, post.owner_username),
+                        ],
+                    ),
                     thumb_url=post.url,
-                    caption=post.url + ("\n" + post.caption) if post.caption else "",
-                    input_message_content=InputTextMessageContent(str(post.url)),
-                )
-            )
-        elif post.typename == "GraphVideo":
-            logging.info(post.video_url)
-            results.append(
-                InlineQueryResultVideo(
-                    id=str(uuid4()),
-                    title="Video",
-                    description="description",
-                    video_url=post.video_url,
-                    thumb_url=post.video_url,
-                    mime_type="video/mp4",
-                    caption="https://instagram.com/p/"
-                    + shortcode
-                    + ("\n" + post.caption)
-                    if post.caption
-                    else "",
-                )
-            )
-            results.append(
-                InlineQueryResultArticle(
-                    id=str(uuid4()),
-                    title="URL",
-                    description="URL",
-                    video_url=post.video_url,
-                    thumb_url=post.video_url,
-                    caption=post.video_url + ("\n" + post.caption)
-                    if post.caption
-                    else "",
-                    input_message_content=InputTextMessageContent(str(post.video_url)),
                 )
             )
     else:
@@ -258,7 +370,6 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
             InlineQueryResultArticle(
                 id=str(uuid4()),
                 title="Unauthorized user",
-                description="Unauthorized user",
                 input_message_content=InputTextMessageContent("Unauthorized user"),
             )
         ]
@@ -266,8 +377,8 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
     update.inline_query.answer(results, cache_time=30)
 
 
-def echo(update: Update, context: CallbackContext) -> None:
-    """Echo the user message."""
+def reply(update: Update, context: CallbackContext) -> None:
+    """Replies to messages in DMs."""
     logging.info(str(update.message))
     ig_post = True
     if update.message.from_user.id in authorized_users:
@@ -275,39 +386,84 @@ def echo(update: Update, context: CallbackContext) -> None:
         if ig_post:
             post = instaloader.Post.from_shortcode(L.context, shortcode)
             logging.info(str(post))
-            arguments = {
-                "caption": "https://instagram.com/p/"
-                + shortcode
-                + "/"
-                + (("\n" + post.caption) if post.caption else (""),)[0],
-                "quote": True,
-            }
             if post.typename == "GraphImage":
-                update.message.reply_photo(photo=post.url, **arguments)
+                update.message.reply_photo(
+                    photo=post.url,
+                    quote=True,
+                    caption="Media\n"
+                    + caption_gen(
+                        post.owner_username,
+                        shortcode,
+                        post.likes,
+                        post.comments,
+                        post.date_utc,
+                        post.caption,
+                        post.owner_id,
+                    ),
+                    caption_entities=[
+                        telegram.MessageEntity(
+                            type="text_link",
+                            offset=0,
+                            length=5,
+                            url=post.url,
+                        ),
+                        owner_url_entity(6, post.owner_username),
+                    ],
+                )
             elif post.typename == "GraphVideo":
-                update.message.reply_video(video=post.video_url, **arguments)
+                update.message.reply_video(
+                    video=post.video_url,
+                    quote=True,
+                    caption="Media\n"
+                    + caption_gen(
+                        post.owner_username,
+                        shortcode,
+                        post.likes,
+                        post.comments,
+                        post.date_utc,
+                        post.caption,
+                        post.owner_id,
+                    ),
+                    caption_entities=[
+                        telegram.MessageEntity(
+                            type="text_link",
+                            offset=0,
+                            length=5,
+                            url=post.video_url,
+                        ),
+                        owner_url_entity(6, post.owner_username),
+                    ],
+                )
             elif post.typename == "GraphSidecar":
                 counter = 0
                 media_group = []
                 for x in post.get_sidecar_nodes():
                     counter += 1
-                    caption = (
-                        "https://instagram.com/p/"
-                        + shortcode
-                        + "/"
-                        + " "
-                        + str(counter)
-                        + "/"
-                        + str(post.mediacount)
-                        + ("\n" + post.caption)
-                        if post.caption
-                        else ""
+                    caption = "Media\n" + caption_gen(
+                        post.owner_username,
+                        shortcode,
+                        post.likes,
+                        post.comments,
+                        post.date_utc,
+                        post.caption,
+                        owner_id=post.owner_id,
+                        counter=counter,
+                        media_count=post.mediacount,
                     )
                     if x.is_video is not True:
                         media_group.append(
                             InputMediaPhoto(
                                 media=x.display_url,
                                 caption=caption,
+                                caption_entities=[
+                                    telegram.MessageEntity(
+                                        type="text_link",
+                                        offset=0,
+                                        length=5,
+                                        url=x.display_url,
+                                    ),
+                                    owner_url_entity(6, post.owner_username),
+                                ],
                             )
                         )
                     else:
@@ -315,6 +471,15 @@ def echo(update: Update, context: CallbackContext) -> None:
                             InputMediaVideo(
                                 media=x.video_url,
                                 caption=caption,
+                                caption_entities=[
+                                    telegram.MessageEntity(
+                                        type="text_link",
+                                        offset=0,
+                                        length=5,
+                                        url=x.video_url,
+                                    ),
+                                    owner_url_entity(6, post.owner_username),
+                                ],
                             )
                         )
                 for y in media_group:
@@ -337,7 +502,7 @@ def main(token: str) -> None:
 
     dispatcher.add_handler(InlineQueryHandler(inlinequery))
 
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, reply))
 
     updater.start_polling()
     updater.idle()
