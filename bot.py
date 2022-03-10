@@ -10,7 +10,6 @@ from telegram import (
     InlineQueryResultPhoto,
     InlineQueryResultVideo,
     InlineQueryResult,
-    ParseMode,
     InputTextMessageContent,
     Update,
     InputMediaPhoto,
