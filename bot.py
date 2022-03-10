@@ -23,12 +23,12 @@ from telegram.ext import (
     MessageHandler,
     Filters,
 )
-from typing import NamedTuple
+from typing import NamedTuple, List
 
 
 class Pair(NamedTuple):
     caption: str = ""
-    entities: list[telegram.MessageEntity] = []
+    entities: List[telegram.MessageEntity] = []
 
 
 if __name__ == "__main__":
