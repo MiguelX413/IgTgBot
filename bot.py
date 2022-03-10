@@ -23,7 +23,7 @@ from telegram.ext import (
     MessageHandler,
     Filters,
 )
-from typing import NamedTuple, List
+from typing import NamedTuple, List, Union
 
 
 class Pair(NamedTuple):
@@ -345,7 +345,7 @@ def reply(update: Update, context: CallbackContext) -> None:
 
             if post.typename == "GraphSidecar":
                 counter: int = 0
-                media_group: list[InputMediaPhoto | InputMediaVideo] = []
+                media_group: list[Union[InputMediaPhoto, InputMediaVideo]] = []
                 for x in post.get_sidecar_nodes():
                     counter += 1
                     pair = pair_gen(
@@ -374,23 +374,25 @@ def reply(update: Update, context: CallbackContext) -> None:
                     quote=True,
                 )
 
-            elif post.typename == "GraphImage":
-                pair = pair_gen(post, post.url)
-                update.message.reply_photo(
-                    photo=post.url,
-                    quote=True,
-                    caption=pair.caption,
-                    caption_entities=pair.entities,
+            elif post.typename == "GraphImage" or post.typename == "GraphVideo":
+                pair = pair_gen(
+                    post, post.video_url if post.typename == "GraphVideo" else post.url
                 )
+                if post.typename == "GraphImage":
+                    update.message.reply_photo(
+                        photo=post.url,
+                        quote=True,
+                        caption=pair.caption,
+                        caption_entities=pair.entities,
+                    )
 
-            elif post.typename == "GraphVideo":
-                pair = pair_gen(post, post.video_url)
-                update.message.reply_video(
-                    video=post.video_url,
-                    quote=True,
-                    caption=pair.caption,
-                    caption_entities=pair.entities,
-                )
+                elif post.typename == "GraphVideo":
+                    update.message.reply_video(
+                        video=post.video_url,
+                        quote=True,
+                        caption=pair.caption,
+                        caption_entities=pair.entities,
+                    )
         else:
             update.message.reply_text("Not an Instagram post", quote=True)
     else:
@@ -398,7 +400,7 @@ def reply(update: Update, context: CallbackContext) -> None:
 
 
 def main(token: str) -> None:
-    updater = Updater(token, use_context=True)
+    updater: Updater = Updater(token, use_context=True)
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CommandHandler("start", start))
