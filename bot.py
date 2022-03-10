@@ -23,7 +23,7 @@ from telegram.ext import (
     MessageHandler,
     Filters,
 )
-from typing import NamedTuple, List, Union
+from typing import NamedTuple, List, Union, Dict
 
 
 class Pair(NamedTuple):
@@ -122,16 +122,15 @@ if __name__ == "__main__":
 
 
 def utf16len(string: str) -> int:
-    length: int = 0
-    for x in string:
-        length += 1 if ord(x) < 65536 else 2
-    return length
+    return len(string.encode("UTF-16-le")) // 2
 
 
-location_emoji: str = "📍"
-heart_emoji: str = "❤️"
-message_emoji: str = "💬"
-calendar_emoji: str = "📅"
+emojis: Dict[str, str] = {
+    "location": "📍",
+    "heart": "❤️",
+    "comments": "💬",
+    "calendar": "📅",
+}
 
 
 def pair_gen(
@@ -186,35 +185,35 @@ def pair_gen(
         entities.append(
             telegram.MessageEntity(
                 type="text_link",
-                offset=utf16len(caption + location_emoji),
+                offset=utf16len(caption + emojis["location"]),
                 length=utf16len(str(input_post.location.name)),
                 url="https://www.instagram.com/explore/locations/"
                 + str(input_post.location.id)
                 + "/",
             )
         )
-        caption += location_emoji + str(input_post.location.name) + "\n"
+        caption += emojis["location"] + str(input_post.location.name) + "\n"
 
     # Likes and Comments
     entities.append(
         telegram.MessageEntity(
             type="text_link",
-            offset=utf16len(caption + heart_emoji),
+            offset=utf16len(caption + emojis["heart"]),
             length=utf16len(str(input_post.likes)),
             url="https://www.instagram.com/p/" + input_post.shortcode + "/liked_by/",
         )
     )
     caption += (
-        heart_emoji
+        emojis["heart"]
         + str(input_post.likes)
         + " "
-        + message_emoji
+        + emojis["comments"]
         + str(input_post.comments)
         + "\n"
     )
 
     # Date
-    caption += calendar_emoji + f"{input_post.date_utc:%Y-%m-%d %H:%M:%S}" + "\n"
+    caption += emojis["calendar"] + f"{input_post.date_utc:%Y-%m-%d %H:%M:%S}" + "\n"
 
     # Post Caption
     if input_post.caption is not None:
