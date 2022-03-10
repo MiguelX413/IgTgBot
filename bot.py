@@ -81,9 +81,10 @@ if __name__ == "__main__":
         dest="logfile",
         help="Output to log file",
     )
+    parser_args = parser.parse_args()
 
     do_rich = True
-    if parser.parse_args().rich:
+    if parser_args.rich:
         try:
             import rich
             from rich.progress import track, Progress
@@ -98,25 +99,31 @@ if __name__ == "__main__":
     else:
         logging_handlers = [logging.StreamHandler()]
 
-    if parser.parse_args().logfile:
+    if parser_args.logfile:
         logging_handlers.append(logging.FileHandler("IgTgBot.log"))
 
     logging.basicConfig(
-        level=logging.DEBUG if parser.parse_args().debug else logging.INFO,
+        level=logging.DEBUG if parser_args.debug else logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=logging_handlers,
     )
 
-    if parser.parse_args().uid is None:
+    logging.info(str(parser_args))
+
+    if parser_args.uid is None:
         authorized_users: set = set()
         logging.info("No authorized users specified")
     else:
-        authorized_users: set = set(int(uid) for uid in parser.parse_args().uid)
+        authorized_users: set = set(int(uid) for uid in parser_args.uid)
         logging.info("Authorized users: " + str(authorized_users))
 
     L = instaloader.Instaloader()
-    if parser.parse_args().login is not False:
-        IG_user: str = parser.parse_args().iguser if parser.parse_args().iguser is not None else input("Please type your Instagram username: ")
+    if parser_args.login is not False:
+        IG_user: str = (
+            parser_args.iguser
+            if parser_args.iguser is not None
+            else input("Please type your Instagram username: ")
+        )
         try:
             L.load_session_from_file(username=IG_user)
         except FileNotFoundError:
@@ -420,4 +427,4 @@ def main(token: str) -> None:
 
 if __name__ == "__main__":
 
-    main(parser.parse_args().token)
+    main(parser_args.token)
