@@ -70,6 +70,12 @@ if __name__ == "__main__":
         help="Runs without an Instagram account",
     )
     parser.add_argument(
+        "--user",
+        action="store",
+        dest="iguser",
+        help="Username through which Instaloader is ran",
+    )
+    parser.add_argument(
         "--log-file",
         action="store_true",
         dest="logfile",
@@ -110,7 +116,7 @@ if __name__ == "__main__":
 
     L = instaloader.Instaloader()
     if parser.parse_args().login is not False:
-        IG_user: str = input("Please type your Instagram username: ")
+        IG_user: str = parser.parse_args().iguser if parser.parse_args().iguser is not None else input("Please type your Instagram username: ")
         try:
             L.load_session_from_file(username=IG_user)
         except FileNotFoundError:
