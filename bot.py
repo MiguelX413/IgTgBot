@@ -400,7 +400,7 @@ def reply(update: Update, context: CallbackContext) -> None:
 
 
 def main(token: str) -> None:
-    updater: Updater = Updater(token, use_context=True)
+    updater = Updater(token, use_context=True)
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CommandHandler("start", start))
