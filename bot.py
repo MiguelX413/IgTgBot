@@ -28,7 +28,6 @@ from telegram.ext import (
 
 if __name__ == "__main__":
     import argparse
-    import sys
 
     parser = argparse.ArgumentParser(description="Runs TG bot")
     parser.add_argument(
