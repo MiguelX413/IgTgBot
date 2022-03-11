@@ -291,7 +291,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                     )
                 )
 
-        elif post.typename == "GraphImage" or post.typename == "GraphVideo":
+        elif post.typename in ("GraphImage", "GraphVideo"):
             pair = pair_gen(
                 post, post.video_url if post.typename == "GraphVideo" else post.url
             )
@@ -386,7 +386,7 @@ def reply(update: Update, context: CallbackContext) -> None:
                     quote=True,
                 )
 
-            elif post.typename == "GraphImage" or post.typename == "GraphVideo":
+            elif post.typename in ("GraphImage", "GraphVideo"):
                 pair = pair_gen(
                     post, post.video_url if post.typename == "GraphVideo" else post.url
                 )
