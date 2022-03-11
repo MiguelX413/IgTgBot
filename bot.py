@@ -23,7 +23,7 @@ from telegram.ext import (
     MessageHandler,
     Filters,
 )
-from typing import NamedTuple, List, Union, Dict
+from typing import NamedTuple, List, Union, Dict, Set
 
 
 class Pair(NamedTuple):
@@ -73,6 +73,7 @@ if __name__ == "__main__":
         "--user",
         action="store",
         dest="iguser",
+        type=str,
         help="Username through which Instaloader is ran",
     )
     parser.add_argument(
@@ -109,12 +110,13 @@ if __name__ == "__main__":
     )
 
     logging.info(str(parser_args))
+    logging.info("do_rich: " + str(do_rich))
 
+    authorized_users: Set[int] = set()
     if parser_args.uid is None:
-        authorized_users: set = set()
         logging.info("No authorized users specified")
     else:
-        authorized_users: set = set(int(uid) for uid in parser_args.uid)
+        authorized_users.update(parser_args.uid)
         logging.info("Authorized users: " + str(authorized_users))
 
     L = instaloader.Instaloader()
@@ -152,6 +154,7 @@ def pair_gen(
     counter: int = None,
 ) -> Pair:
 
+    # Initializing
     caption: str = ""
     entities: list[telegram.MessageEntity] = []
 
