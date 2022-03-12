@@ -253,7 +253,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
     """Produces results for Inline Queries"""
     logging.info(update.inline_query)
     if (update.inline_query.from_user.id in whitelist) or (
-            args.whitelisttoggle is False
+        args.whitelisttoggle is False
     ):
         results: list[InlineQueryResult] = []
         shortcode: str = update.inline_query.query
@@ -359,9 +359,7 @@ def reply(update: Update, context: CallbackContext) -> None:
     """Replies to messages in DMs."""
     logging.info(str(update.message))
     ig_post: bool = True
-    if (update.message.from_user.id in whitelist) or (
-            args.whitelisttoggle is False
-    ):
+    if (update.message.from_user.id in whitelist) or (args.whitelisttoggle is False):
         shortcode = update.message.text
         if ig_post:
             post: instaloader.Post = instaloader.Post.from_shortcode(
