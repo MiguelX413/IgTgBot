@@ -36,12 +36,10 @@ if __name__ == "__main__":
 
     parser: argparse.ArgumentParser = argparse.ArgumentParser(description="Runs TG bot")
     parser.add_argument(
-        "-t",
-        "--token",
+        "token",
         action="store",
         default=os.environ["TG_TOKEN"] if "TG_TOKEN" in os.environ else None,
         type=str,
-        dest="token",
         help="Telegram Token for the bot",
     )
     parser.add_argument(
