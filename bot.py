@@ -89,10 +89,10 @@ if __name__ == "__main__":
         dest="logfile",
         help="Output to log file",
     )
-    parser_args = parser.parse_args()
+    args = parser.parse_args()
 
     do_rich = True
-    if parser_args.rich:
+    if args.rich:
         try:
             import rich
             from rich.progress import track, Progress
@@ -107,30 +107,30 @@ if __name__ == "__main__":
     else:
         logging_handlers = [logging.StreamHandler()]
 
-    if parser_args.logfile:
+    if args.logfile:
         logging_handlers.append(logging.FileHandler("IgTgBot.log"))
 
     logging.basicConfig(
-        level=logging.DEBUG if parser_args.debug else logging.INFO,
+        level=logging.DEBUG if args.debug else logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=logging_handlers,
     )
 
-    logging.info(str(parser_args))
+    logging.info(str(args))
     logging.info("do_rich: " + str(do_rich))
 
     whitelist: Set[int] = set()
-    if parser_args.uid is None:
+    if args.uid is None:
         logging.info("No authorized users specified")
     else:
-        whitelist.update(parser_args.uid)
+        whitelist.update(args.uid)
         logging.info("Authorized users: " + str(whitelist))
 
     L = instaloader.Instaloader()
-    if parser_args.login is not False:
+    if args.login is not False:
         IG_user: str = (
-            parser_args.iguser
-            if parser_args.iguser is not None
+            args.iguser
+            if args.iguser is not None
             else input("Please type your Instagram username: ")
         )
         try:
@@ -253,7 +253,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
     """Produces results for Inline Queries"""
     logging.info(update.inline_query)
     if (update.inline_query.from_user.id in whitelist) or (
-        parser_args.whitelisttoggle is False
+            args.whitelisttoggle is False
     ):
         results: list[InlineQueryResult] = []
         shortcode: str = update.inline_query.query
@@ -360,7 +360,7 @@ def reply(update: Update, context: CallbackContext) -> None:
     logging.info(str(update.message))
     ig_post: bool = True
     if (update.message.from_user.id in whitelist) or (
-        parser_args.whitelisttoggle is False
+            args.whitelisttoggle is False
     ):
         shortcode = update.message.text
         if ig_post:
@@ -441,4 +441,4 @@ def main(token: str) -> None:
 
 if __name__ == "__main__":
 
-    main(parser_args.token)
+    main(args.token)
