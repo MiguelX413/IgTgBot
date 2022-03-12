@@ -50,6 +50,12 @@ if __name__ == "__main__":
         help="Telegram User IDs authorized to use this bot",
     )
     parser.add_argument(
+        "--no-whitelist",
+        action="store_false",
+        dest="whitelisttoggle",
+        help="Allow all Telegram Users to use this bot (This could cause rate limiting by Meta)",
+    )
+    parser.add_argument(
         "-d",
         "--debug",
         action="store_true",
@@ -65,7 +71,7 @@ if __name__ == "__main__":
         "--no-login",
         action="store_false",
         dest="login",
-        help="Runs without an Instagram account",
+        help="Runs without an Instagram account (Not recommended, quickly limited)",
     )
     parser.add_argument(
         "--user",
@@ -110,12 +116,12 @@ if __name__ == "__main__":
     logging.info(str(parser_args))
     logging.info("do_rich: " + str(do_rich))
 
-    authorized_users: Set[int] = set()
+    whitelist: Set[int] = set()
     if parser_args.uid is None:
         logging.info("No authorized users specified")
     else:
-        authorized_users.update(parser_args.uid)
-        logging.info("Authorized users: " + str(authorized_users))
+        whitelist.update(parser_args.uid)
+        logging.info("Authorized users: " + str(whitelist))
 
     L = instaloader.Instaloader()
     if parser_args.login is not False:
@@ -243,7 +249,9 @@ def start(update: Update, _: CallbackContext) -> None:
 def inlinequery(update: Update, context: CallbackContext) -> None:
     """Produces results for Inline Queries"""
     logging.info(update.inline_query)
-    if update.inline_query.from_user.id in authorized_users:
+    if (update.inline_query.from_user.id in whitelist) or (
+        parser_args.whitelisttoggle is False
+    ):
         results: list[InlineQueryResult] = []
         shortcode: str = update.inline_query.query
         post: instaloader.Post = instaloader.Post.from_shortcode(L.context, shortcode)
@@ -348,7 +356,9 @@ def reply(update: Update, context: CallbackContext) -> None:
     """Replies to messages in DMs."""
     logging.info(str(update.message))
     ig_post: bool = True
-    if update.message.from_user.id in authorized_users:
+    if (update.message.from_user.id in whitelist) or (
+        parser_args.whitelisttoggle is False
+    ):
         shortcode = update.message.text
         if ig_post:
             post: instaloader.Post = instaloader.Post.from_shortcode(
