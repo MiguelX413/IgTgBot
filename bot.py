@@ -42,14 +42,16 @@ if __name__ == "__main__":
         type=str,
         help="Telegram Token for the bot",
     )
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         "--uid",
         action="append",
         dest="uid",
+        metavar="Telegram User ID",
         type=int,
         help="Telegram User IDs authorized to use this bot",
     )
-    parser.add_argument(
+    group.add_argument(
         "--no-whitelist",
         action="store_false",
         dest="whitelisttoggle",
@@ -77,6 +79,7 @@ if __name__ == "__main__":
         "--user",
         action="store",
         dest="iguser",
+        metavar="Instagram User",
         type=str,
         help="Username through which Instaloader is ran",
     )
