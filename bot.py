@@ -212,6 +212,23 @@ def pair_gen(
         )
     )
 
+    # Sponsor(s)
+    if input_post.is_sponsored:
+        caption += "Sponsors: "
+        for sponsor_user in input_post.sponsor_users:
+            entities.append(
+                telegram.MessageEntity(
+                    type="text_link",
+                    offset=utf16len(caption),
+                    length=utf16len("@" + sponsor_user.username),
+                    url="https://instagram.com/" + sponsor_user.username + "/",
+                )
+            )
+            caption += (
+                "@" + sponsor_user.username + " (" + str(sponsor_user.userid) + ") "
+            )
+        caption += "\n"
+
     # Location
     if input_post.location is not None:
         entities.append(
