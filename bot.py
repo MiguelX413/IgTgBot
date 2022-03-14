@@ -157,7 +157,6 @@ emojis: Dict[str, str] = {
 
 def pair_gen(
     input_post: instaloader.Post,
-    media_url: str = None,
     counter: int = None,
 ) -> Pair:
 
@@ -166,16 +165,26 @@ def pair_gen(
     entities: list[telegram.MessageEntity] = []
 
     # Media URL
-    if media_url is not None:
-        entities.append(
-            telegram.MessageEntity(
-                type="text_link",
-                offset=utf16len(caption),
-                length=utf16len("Media"),
-                url=media_url,
-            )
+    if counter is None:
+        if input_post.typename == "GraphVideo":
+            media_url = input_post.video_url
+        else:
+            media_url = input_post.url
+    else:
+        node = list(input_post.get_sidecar_nodes(counter, counter))[0]
+        if node.is_video:
+            media_url = node.video_url
+        else:
+            media_url = node.display_url
+    entities.append(
+        telegram.MessageEntity(
+            type="text_link",
+            offset=utf16len(caption),
+            length=utf16len("Media"),
+            url=media_url,
         )
-        caption += "Media\n"
+    )
+    caption += "Media\n"
 
     # Posting account and Counter
     entities.append(
@@ -197,7 +206,7 @@ def pair_gen(
         + input_post.shortcode
         + "/"
         + (
-            (" " + str(counter) + "/" + str(input_post.mediacount) + "\n")
+            (" " + str(counter + 1) + "/" + str(input_post.mediacount) + "\n")
             if counter is not None
             else "\n"
         )
@@ -262,17 +271,14 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
         logging.info(post.mediacount)
         if post.typename == "GraphSidecar":
             counter: int = 0
-            for x in post.get_sidecar_nodes():
-                counter += 1
-                pair = pair_gen(
-                    post, x.video_url if x.is_video else x.display_url, counter
-                )
-                if x.is_video is not True:
+            for node in post.get_sidecar_nodes():
+                pair = pair_gen(post, counter)
+                if node.is_video is not True:
                     results.append(
                         InlineQueryResultPhoto(
                             id=str(uuid4()),
-                            photo_url=x.display_url,
-                            thumb_url=x.display_url,
+                            photo_url=node.display_url,
+                            thumb_url=node.display_url,
                             title="",
                             caption=pair.caption,
                             caption_entities=pair.entities,
@@ -283,9 +289,9 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                     results.append(
                         InlineQueryResultVideo(
                             id=str(uuid4()),
-                            video_url=x.video_url,
+                            video_url=node.video_url,
                             mime_type="video/mp4",
-                            thumb_url=x.display_url,
+                            thumb_url=node.display_url,
                             title="Video",
                             caption=pair.caption,
                             caption_entities=pair.entities,
@@ -299,14 +305,13 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                             pair.caption,
                             entities=pair.entities,
                         ),
-                        thumb_url=x.display_url,
+                        thumb_url=node.display_url,
                     )
                 )
+                counter += 1
 
         elif post.typename in ("GraphImage", "GraphVideo"):
-            pair = pair_gen(
-                post, post.video_url if post.typename == "GraphVideo" else post.url
-            )
+            pair = pair_gen(post)
             if post.typename == "Graphimage":
                 results.append(
                     InlineQueryResultPhoto(
@@ -370,15 +375,12 @@ def reply(update: Update, context: CallbackContext) -> None:
             if post.typename == "GraphSidecar":
                 counter: int = 0
                 media_group: list[Union[InputMediaPhoto, InputMediaVideo]] = []
-                for x in post.get_sidecar_nodes():
-                    counter += 1
-                    pair = pair_gen(
-                        post, x.video_url if x.is_video else x.display_url, counter
-                    )
-                    if x.is_video is not True:
+                for node in post.get_sidecar_nodes():
+                    pair = pair_gen(post, counter)
+                    if node.is_video is not True:
                         media_group.append(
                             InputMediaPhoto(
-                                media=x.display_url,
+                                media=node.display_url,
                                 caption=pair.caption,
                                 caption_entities=pair.entities,
                             )
@@ -386,22 +388,21 @@ def reply(update: Update, context: CallbackContext) -> None:
                     else:
                         media_group.append(
                             InputMediaVideo(
-                                media=x.video_url,
+                                media=node.video_url,
                                 caption=pair.caption,
                                 caption_entities=pair.entities,
                             )
                         )
-                for y in media_group:
-                    logging.info(y)
+                    counter += 1
+                for input_medium in media_group:
+                    logging.info(input_medium)
                 update.message.reply_media_group(
                     media=media_group,
                     quote=True,
                 )
 
             elif post.typename in ("GraphImage", "GraphVideo"):
-                pair = pair_gen(
-                    post, post.video_url if post.typename == "GraphVideo" else post.url
-                )
+                pair = pair_gen(post)
                 if post.typename == "GraphImage":
                     update.message.reply_photo(
                         photo=post.url,
