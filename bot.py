@@ -216,8 +216,9 @@ def pair_gen(
 
     # Sponsor(s)
     if input_post.is_sponsored:
-        caption += "Sponsors: "
+        caption += "Sponsors:"
         for sponsor_user in input_post.sponsor_users:
+            caption += " "
             entities.append(
                 telegram.MessageEntity(
                     type="text_link",
@@ -227,14 +228,15 @@ def pair_gen(
                 )
             )
             caption += (
-                "@" + sponsor_user.username + " (" + str(sponsor_user.userid) + ") "
+                "@" + sponsor_user.username + " (" + str(sponsor_user.userid) + ")"
             )
         caption += "\n"
 
     # Tagged Users
     if len(input_post.tagged_users) > 0:
-        caption += emojis["person"] + " "
+        caption += emojis["person"]
         for tagged_user in input_post.tagged_users:
+            caption += " "
             entities.append(
                 telegram.MessageEntity(
                     type="text_link",
@@ -248,7 +250,7 @@ def pair_gen(
                 + tagged_user
                 + " ("
                 + str(instaloader.Profile.from_username(L.context, tagged_user).userid)
-                + ") "
+                + ")"
             )
         caption += "\n"
 
