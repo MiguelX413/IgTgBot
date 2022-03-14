@@ -148,6 +148,7 @@ def utf16len(string: str) -> int:
 
 
 emojis: Dict[str, str] = {
+    "person": "👤",
     "location": "📍",
     "eyes": "👀",
     "heart": "❤️",
@@ -230,6 +231,27 @@ def pair_gen(
             )
         caption += "\n"
 
+    # Tagged Users
+    if len(input_post.tagged_users) > 0:
+        caption += emojis["person"] + " "
+        for tagged_user in input_post.tagged_users:
+            entities.append(
+                telegram.MessageEntity(
+                    type="text_link",
+                    offset=utf16len(caption),
+                    length=utf16len("@" + tagged_user),
+                    url="https://instagram.com/" + tagged_user + "/",
+                )
+            )
+            caption += (
+                "@"
+                + tagged_user
+                + " ("
+                + str(instaloader.Profile.from_username(L.context, tagged_user).userid)
+                + ") "
+            )
+        caption += "\n"
+
     # Location
     if input_post.location is not None:
         entities.append(
@@ -246,7 +268,7 @@ def pair_gen(
 
     # Views, Likes, and Comments
     if input_post.is_video:
-        caption += (emojis["eyes"] + str(input_post.video_view_count) + " ")
+        caption += emojis["eyes"] + str(input_post.video_view_count) + " "
     entities.append(
         telegram.MessageEntity(
             type="text_link",
