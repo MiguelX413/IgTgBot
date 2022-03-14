@@ -149,6 +149,7 @@ def utf16len(string: str) -> int:
 
 emojis: Dict[str, str] = {
     "location": "📍",
+    "eyes": "👀",
     "heart": "❤️",
     "comments": "💬",
     "calendar": "📅",
@@ -243,7 +244,9 @@ def pair_gen(
         )
         caption += emojis["location"] + str(input_post.location.name) + "\n"
 
-    # Likes and Comments
+    # Views, Likes, and Comments
+    if input_post.is_video:
+        caption += (emojis["eyes"] + str(input_post.video_view_count) + " ")
     entities.append(
         telegram.MessageEntity(
             type="text_link",
