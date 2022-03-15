@@ -174,7 +174,7 @@ def pair_gen(
 ) -> Pair:
     # Initializing
     caption: str = ""
-    entities: list[MessageEntity] = []
+    entities: List[MessageEntity] = []
 
     # Media URL
     if counter is None:
@@ -364,7 +364,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
     if (update.inline_query.from_user.id in whitelist) or (
         args.whitelisttoggle is False
     ):
-        results: list[InlineQueryResult] = []
+        results: List[InlineQueryResult] = []
         shortcode: str = update.inline_query.query
         post: instaloader.Post = instaloader.Post.from_shortcode(L.context, shortcode)
         logging.info(post.typename)
@@ -474,7 +474,7 @@ def reply(update: Update, context: CallbackContext) -> None:
 
             if post.typename == "GraphSidecar":
                 counter: int = 0
-                media_group: list[Union[InputMediaPhoto, InputMediaVideo]] = []
+                media_group: List[Union[InputMediaPhoto, InputMediaVideo]] = []
                 for node in post.get_sidecar_nodes():
                     pair = pair_gen(post, counter)
                     if node.is_video is not True:
