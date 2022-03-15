@@ -310,9 +310,13 @@ def pair_gen(
 
     # Mentions in caption
     mention_occurrences: Set[int] = set()
-    for caption_mention in sorted(set(input_post.caption_mentions), key=len, reverse=True):
+    for caption_mention in sorted(
+        set(input_post.caption_mentions), key=len, reverse=True
+    ):
         normalized_mention = normalize("NFC", caption_mention)
-        for mention_occurrence in find_occurrences(lower_caption, "@" + normalized_mention):
+        for mention_occurrence in find_occurrences(
+            lower_caption, "@" + normalized_mention
+        ):
             if mention_occurrence not in mention_occurrences:
                 entities.append(
                     MessageEntity(
@@ -327,9 +331,13 @@ def pair_gen(
     # Hashtags in caption
     hashtag_occurrences: Set[int] = set()
     print(sorted(set(input_post.caption_hashtags), key=len, reverse=True))
-    for caption_hashtag in sorted(set(input_post.caption_hashtags), key=len, reverse=True):
+    for caption_hashtag in sorted(
+        set(input_post.caption_hashtags), key=len, reverse=True
+    ):
         normalized_hashtag = normalize("NFC", caption_hashtag)
-        for hashtag_occurrence in find_occurrences(lower_caption.lower(), "#" + normalized_hashtag):
+        for hashtag_occurrence in find_occurrences(
+            lower_caption.lower(), "#" + normalized_hashtag
+        ):
             if hashtag_occurrence not in hashtag_occurrences:
                 entities.append(
                     MessageEntity(
