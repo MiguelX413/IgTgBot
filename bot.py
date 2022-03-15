@@ -4,7 +4,6 @@ import os
 import instaloader
 from uuid import uuid4
 
-import telegram
 from telegram import (
     InlineQueryResultArticle,
     InlineQueryResultPhoto,
@@ -14,6 +13,7 @@ from telegram import (
     Update,
     InputMediaPhoto,
     InputMediaVideo,
+    MessageEntity,
 )
 from telegram.ext import (
     Updater,
@@ -25,10 +25,21 @@ from telegram.ext import (
 )
 from typing import NamedTuple, List, Union, Dict, Set
 
+from unicodedata import normalize
+
 
 class Pair(NamedTuple):
     caption: str = ""
-    entities: List[telegram.MessageEntity] = []
+    entities: List[MessageEntity] = []
+
+
+def find_occurrences(string: str, substring: str) -> Set[int]:
+    offsets: Set[int] = set()
+    pos: int = string.find(substring)
+    while pos != -1:
+        offsets.add(pos)
+        pos = string.find(substring, pos + 1)
+    return offsets
 
 
 if __name__ == "__main__":
@@ -161,10 +172,9 @@ def pair_gen(
     input_post: instaloader.Post,
     counter: int = None,
 ) -> Pair:
-
     # Initializing
     caption: str = ""
-    entities: list[telegram.MessageEntity] = []
+    entities: list[MessageEntity] = []
 
     # Media URL
     if counter is None:
@@ -179,7 +189,7 @@ def pair_gen(
         else:
             media_url = node.display_url
     entities.append(
-        telegram.MessageEntity(
+        MessageEntity(
             type="text_link",
             offset=utf16len(caption),
             length=utf16len("Media"),
@@ -190,7 +200,7 @@ def pair_gen(
 
     # Posting account and Counter
     entities.append(
-        telegram.MessageEntity(
+        MessageEntity(
             type="text_link",
             offset=utf16len(caption),
             length=utf16len("@" + input_post.owner_username),
@@ -220,7 +230,7 @@ def pair_gen(
         for sponsor_user in input_post.sponsor_users:
             caption += " "
             entities.append(
-                telegram.MessageEntity(
+                MessageEntity(
                     type="text_link",
                     offset=utf16len(caption),
                     length=utf16len("@" + sponsor_user.username),
@@ -238,7 +248,7 @@ def pair_gen(
         for tagged_user in input_post.tagged_users:
             caption += " "
             entities.append(
-                telegram.MessageEntity(
+                MessageEntity(
                     type="text_link",
                     offset=utf16len(caption),
                     length=utf16len("@" + tagged_user),
@@ -257,11 +267,11 @@ def pair_gen(
     # Location
     if input_post.location is not None:
         entities.append(
-            telegram.MessageEntity(
+            MessageEntity(
                 type="text_link",
                 offset=utf16len(caption + emojis["location"]),
                 length=utf16len(str(input_post.location.name)),
-                url="https://www.instagram.com/explore/locations/"
+                url="https://instagram.com/explore/locations/"
                 + str(input_post.location.id)
                 + "/",
             )
@@ -272,11 +282,11 @@ def pair_gen(
     if input_post.is_video:
         caption += emojis["eyes"] + str(input_post.video_view_count) + " "
     entities.append(
-        telegram.MessageEntity(
+        MessageEntity(
             type="text_link",
             offset=utf16len(caption + emojis["heart"]),
             length=utf16len(str(input_post.likes)),
-            url="https://www.instagram.com/p/" + input_post.shortcode + "/liked_by/",
+            url="https://instagram.com/p/" + input_post.shortcode + "/liked_by/",
         )
     )
     caption += (
@@ -293,7 +303,35 @@ def pair_gen(
 
     # Post Caption
     if input_post.caption is not None:
-        caption += input_post.caption
+        caption += normalize("NFC", input_post.caption)
+
+    # Mentions in caption
+    for caption_mention in set(input_post.caption_mentions):
+        normalized_mention = normalize("NFC", caption_mention)
+        for occurrence in find_occurrences(caption, "@" + normalized_mention):
+            entities.append(
+                MessageEntity(
+                    type="text_link",
+                    offset=utf16len(caption[0:occurrence]),
+                    length=utf16len("@" + normalized_mention),
+                    url="https://instagram.com/" + normalized_mention + "/",
+                )
+            )
+
+    # Hashtags in caption
+    for caption_hashtag in set(input_post.caption_hashtags):
+        normalized_hashtag = normalize("NFC", caption_hashtag)
+        for occurrence in find_occurrences(caption, "#" + normalized_hashtag):
+            entities.append(
+                MessageEntity(
+                    type="text_link",
+                    offset=utf16len(caption[0:occurrence]),
+                    length=utf16len("#" + normalized_hashtag),
+                    url="https://instagram.com/explore/tags/"
+                    + normalized_hashtag
+                    + "/",
+                )
+            )
 
     return Pair(caption, entities)
 
