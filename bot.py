@@ -305,33 +305,43 @@ def pair_gen(
     if input_post.caption is not None:
         caption += normalize("NFC", input_post.caption)
 
+    # Mentions + Hashtags
+    lower_caption = caption.lower()
+
     # Mentions in caption
-    for caption_mention in set(input_post.caption_mentions):
+    mention_occurrences: Set[int] = set()
+    for caption_mention in sorted(set(input_post.caption_mentions), key=len, reverse=True):
         normalized_mention = normalize("NFC", caption_mention)
-        for occurrence in find_occurrences(caption, "@" + normalized_mention):
-            entities.append(
-                MessageEntity(
-                    type="text_link",
-                    offset=utf16len(caption[0:occurrence]),
-                    length=utf16len("@" + normalized_mention),
-                    url="https://instagram.com/" + normalized_mention + "/",
+        for mention_occurrence in find_occurrences(lower_caption, "@" + normalized_mention):
+            if mention_occurrence not in mention_occurrences:
+                entities.append(
+                    MessageEntity(
+                        type="text_link",
+                        offset=utf16len(caption[0:mention_occurrence]),
+                        length=utf16len("@" + normalized_mention),
+                        url="https://instagram.com/" + normalized_mention + "/",
+                    )
                 )
-            )
+            mention_occurrences.add(mention_occurrence)
 
     # Hashtags in caption
-    for caption_hashtag in set(input_post.caption_hashtags):
+    hashtag_occurrences: Set[int] = set()
+    print(sorted(set(input_post.caption_hashtags), key=len, reverse=True))
+    for caption_hashtag in sorted(set(input_post.caption_hashtags), key=len, reverse=True):
         normalized_hashtag = normalize("NFC", caption_hashtag)
-        for occurrence in find_occurrences(caption, "#" + normalized_hashtag):
-            entities.append(
-                MessageEntity(
-                    type="text_link",
-                    offset=utf16len(caption[0:occurrence]),
-                    length=utf16len("#" + normalized_hashtag),
-                    url="https://instagram.com/explore/tags/"
-                    + normalized_hashtag
-                    + "/",
+        for hashtag_occurrence in find_occurrences(lower_caption.lower(), "#" + normalized_hashtag):
+            if hashtag_occurrence not in hashtag_occurrences:
+                entities.append(
+                    MessageEntity(
+                        type="text_link",
+                        offset=utf16len(caption[0:hashtag_occurrence]),
+                        length=utf16len("#" + normalized_hashtag),
+                        url="https://instagram.com/explore/tags/"
+                        + normalized_hashtag
+                        + "/",
+                    )
                 )
-            )
+            hashtag_occurrences.add(hashtag_occurrence)
 
     return Pair(caption, entities)
 
