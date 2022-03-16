@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import logging
 import os
-import instaloader
 from uuid import uuid4
+from typing import NamedTuple, List, Union, Dict, Set
+from unicodedata import normalize
+
 
 from telegram import (
     InlineQueryResultArticle,
@@ -23,9 +25,8 @@ from telegram.ext import (
     MessageHandler,
     Filters,
 )
-from typing import NamedTuple, List, Union, Dict, Set
 
-from unicodedata import normalize
+from instaloader import Instaloader, Post, Profile
 
 
 class Pair(NamedTuple):
@@ -137,7 +138,7 @@ if __name__ == "__main__":
         whitelist.update(args.uid)
         logging.info("Authorized users: " + str(whitelist))
 
-    L = instaloader.Instaloader()
+    L = Instaloader()
     if args.login is not False:
         IG_user: str = (
             args.iguser
@@ -169,7 +170,7 @@ emojis: Dict[str, str] = {
 
 
 def pair_gen(
-    input_post: instaloader.Post,
+    input_post: Post,
     counter: int = None,
 ) -> Pair:
     # Initializing
@@ -259,7 +260,7 @@ def pair_gen(
                 "@"
                 + tagged_user
                 + " ("
-                + str(instaloader.Profile.from_username(L.context, tagged_user).userid)
+                + str(Profile.from_username(L.context, tagged_user).userid)
                 + ")"
             )
         caption += "\n"
@@ -366,7 +367,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
     ):
         results: List[InlineQueryResult] = []
         shortcode: str = update.inline_query.query
-        post: instaloader.Post = instaloader.Post.from_shortcode(L.context, shortcode)
+        post: Post = Post.from_shortcode(L.context, shortcode)
         logging.info(post.typename)
         logging.info(post.mediacount)
         if post.typename == "GraphSidecar":
@@ -467,9 +468,7 @@ def reply(update: Update, context: CallbackContext) -> None:
     if (update.message.from_user.id in whitelist) or (args.whitelisttoggle is False):
         shortcode = update.message.text
         if ig_post:
-            post: instaloader.Post = instaloader.Post.from_shortcode(
-                L.context, shortcode
-            )
+            post: Post = Post.from_shortcode(L.context, shortcode)
             logging.info(str(post))
 
             if post.typename == "GraphSidecar":
