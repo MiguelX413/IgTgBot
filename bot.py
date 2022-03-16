@@ -499,7 +499,7 @@ def reply(update: Update, context: CallbackContext) -> None:
     logging.info(str(update.message))
     ig_post: bool = True
     if (update.message.from_user.id in whitelist) or (args.whitelisttoggle is False):
-        shortcode = update.message.text
+        shortcode: str = update.message.text
         if ig_post:
             post: NormalizedPost = NormalizedPost.from_shortcode(L.context, shortcode)
             logging.info(str(post))
