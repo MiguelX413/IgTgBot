@@ -2,8 +2,9 @@
 import logging
 import os
 from uuid import uuid4
-from typing import NamedTuple, List, Union, Dict, Set
+from typing import NamedTuple, List, Union, Dict, Set, Optional
 from unicodedata import normalize
+import re
 
 
 from telegram import (
@@ -27,6 +28,38 @@ from telegram.ext import (
 )
 
 from instaloader import Instaloader, Post, Profile
+
+
+class NormalizedPost(Post):
+    @property
+    def normalized_caption(self) -> Optional[str]:
+        """Caption."""
+        if (
+            "edge_media_to_caption" in self._node
+            and self._node["edge_media_to_caption"]["edges"]
+        ):
+            return normalize("NFC", self._node["edge_media_to_caption"]["edges"][0]["node"]["text"])
+        elif "caption" in self._node:
+            return normalize("NFC", self._node["caption"])
+        return None
+
+    @property
+    def normalized_caption_hashtags(self) -> List[str]:
+        """List of all lowercased hashtags (without preceeding #) that occur in the Post's caption."""
+        if not self.caption:
+            return []
+        hashtag_regex = re.compile(r"(?:#)(\w(?:(?:\w|(?:\.(?!\.))){0,28}(?:\w))?)")
+        return re.findall(hashtag_regex, self.normalized_caption.lower())
+
+    @property
+    def normalized_caption_mentions(self) -> List[str]:
+        """List of all lowercased profiles that are mentioned in the Post's caption, without preceeding @."""
+        if not self.caption:
+            return []
+        mention_regex = re.compile(
+            r"(?:^|\W|_)(?:@)(\w(?:(?:\w|(?:\.(?!\.))){0,28}(?:\w))?)"
+        )
+        return re.findall(mention_regex, self.normalized_caption.lower())
 
 
 class Pair(NamedTuple):
@@ -170,7 +203,7 @@ emojis: Dict[str, str] = {
 
 
 def pair_gen(
-    input_post: Post,
+    input_post: NormalizedPost,
     counter: int = None,
 ) -> Pair:
     # Initializing
@@ -304,53 +337,53 @@ def pair_gen(
 
     # Post Caption
     if input_post.caption is not None:
-        caption += normalize("NFC", input_post.caption)
+        old_caption = caption
+        caption += input_post.normalized_caption
 
-    # Mentions + Hashtags
-    lower_caption = caption.lower()
+        # Mentions + Hashtags
+        search_caption = (
+            old_caption.replace("@", ",") + input_post.normalized_caption
+        ).lower()
 
-    # Mentions in caption
-    mention_occurrences: Set[int] = set()
-    for caption_mention in sorted(
-        set(input_post.caption_mentions), key=len, reverse=True
-    ):
-        normalized_mention = normalize("NFC", caption_mention)
-        for mention_occurrence in find_occurrences(
-            lower_caption, "@" + normalized_mention
+        # Mentions in caption
+        mention_occurrences: Set[int] = set()
+        for caption_mention in sorted(
+            set(input_post.normalized_caption_mentions), key=len, reverse=True
         ):
-            if mention_occurrence not in mention_occurrences:
-                entities.append(
-                    MessageEntity(
-                        type="text_link",
-                        offset=utf16len(caption[0:mention_occurrence]),
-                        length=utf16len("@" + normalized_mention),
-                        url="https://instagram.com/" + normalized_mention + "/",
+            for mention_occurrence in find_occurrences(
+                search_caption, "@" + caption_mention
+            ):
+                if mention_occurrence not in mention_occurrences:
+                    entities.append(
+                        MessageEntity(
+                            type="text_link",
+                            offset=utf16len(caption[0:mention_occurrence]),
+                            length=utf16len("@" + caption_mention),
+                            url="https://instagram.com/" + caption_mention + "/",
+                        )
                     )
-                )
-            mention_occurrences.add(mention_occurrence)
+                mention_occurrences.add(mention_occurrence)
 
-    # Hashtags in caption
-    hashtag_occurrences: Set[int] = set()
-    print(sorted(set(input_post.caption_hashtags), key=len, reverse=True))
-    for caption_hashtag in sorted(
-        set(input_post.caption_hashtags), key=len, reverse=True
-    ):
-        normalized_hashtag = normalize("NFC", caption_hashtag)
-        for hashtag_occurrence in find_occurrences(
-            lower_caption.lower(), "#" + normalized_hashtag
+        # Hashtags in caption
+        hashtag_occurrences: Set[int] = set()
+        for caption_hashtag in sorted(
+            set(input_post.normalized_caption_hashtags), key=len, reverse=True
         ):
-            if hashtag_occurrence not in hashtag_occurrences:
-                entities.append(
-                    MessageEntity(
-                        type="text_link",
-                        offset=utf16len(caption[0:hashtag_occurrence]),
-                        length=utf16len("#" + normalized_hashtag),
-                        url="https://instagram.com/explore/tags/"
-                        + normalized_hashtag
-                        + "/",
+            for hashtag_occurrence in find_occurrences(
+                search_caption, "#" + caption_hashtag
+            ):
+                if hashtag_occurrence not in hashtag_occurrences:
+                    entities.append(
+                        MessageEntity(
+                            type="text_link",
+                            offset=utf16len(caption[0:hashtag_occurrence]),
+                            length=utf16len("#" + caption_hashtag),
+                            url="https://instagram.com/explore/tags/"
+                            + caption_hashtag
+                            + "/",
+                        )
                     )
-                )
-            hashtag_occurrences.add(hashtag_occurrence)
+                hashtag_occurrences.add(hashtag_occurrence)
 
     return Pair(caption, entities)
 
@@ -367,7 +400,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
     ):
         results: List[InlineQueryResult] = []
         shortcode: str = update.inline_query.query
-        post: Post = Post.from_shortcode(L.context, shortcode)
+        post: NormalizedPost = NormalizedPost.from_shortcode(L.context, shortcode)
         logging.info(post.typename)
         logging.info(post.mediacount)
         if post.typename == "GraphSidecar":
@@ -468,7 +501,7 @@ def reply(update: Update, context: CallbackContext) -> None:
     if (update.message.from_user.id in whitelist) or (args.whitelisttoggle is False):
         shortcode = update.message.text
         if ig_post:
-            post: Post = Post.from_shortcode(L.context, shortcode)
+            post: NormalizedPost = NormalizedPost.from_shortcode(L.context, shortcode)
             logging.info(str(post))
 
             if post.typename == "GraphSidecar":
