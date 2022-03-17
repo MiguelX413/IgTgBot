@@ -32,34 +32,36 @@ from instaloader import Instaloader, Post, Profile
 
 class NormalizedPost(Post):
     @property
-    def normalized_caption(self) -> Optional[str]:
+    def caption(self) -> Optional[str]:
         """Caption."""
         if (
             "edge_media_to_caption" in self._node
             and self._node["edge_media_to_caption"]["edges"]
         ):
-            return normalize("NFC", self._node["edge_media_to_caption"]["edges"][0]["node"]["text"])
+            return normalize(
+                "NFC", self._node["edge_media_to_caption"]["edges"][0]["node"]["text"]
+            )
         elif "caption" in self._node:
             return normalize("NFC", self._node["caption"])
         return None
 
     @property
-    def normalized_caption_hashtags(self) -> List[str]:
+    def caption_hashtags(self) -> List[str]:
         """List of all lowercased hashtags (without preceeding #) that occur in the Post's caption."""
         if not self.caption:
             return []
         hashtag_regex = re.compile(r"(?:#)(\w(?:(?:\w|(?:\.(?!\.))){0,28}(?:\w))?)")
-        return re.findall(hashtag_regex, self.normalized_caption.lower())
+        return re.findall(hashtag_regex, self.caption.lower())
 
     @property
-    def normalized_caption_mentions(self) -> List[str]:
+    def caption_mentions(self) -> List[str]:
         """List of all lowercased profiles that are mentioned in the Post's caption, without preceeding @."""
         if not self.caption:
             return []
         mention_regex = re.compile(
             r"(?:^|\W|_)(?:@)(\w(?:(?:\w|(?:\.(?!\.))){0,28}(?:\w))?)"
         )
-        return re.findall(mention_regex, self.normalized_caption.lower())
+        return re.findall(mention_regex, self.caption.lower())
 
 
 class Pair(NamedTuple):
@@ -338,17 +340,15 @@ def pair_gen(
     # Post Caption
     if input_post.caption is not None:
         old_caption = caption
-        caption += input_post.normalized_caption
+        caption += input_post.caption
 
         # Mentions + Hashtags
-        search_caption = (
-            old_caption.replace("@", ",") + input_post.normalized_caption
-        ).lower()
+        search_caption = (old_caption.replace("@", ",") + input_post.caption).lower()
 
         # Mentions in caption
         mention_occurrences: Set[int] = set()
         for caption_mention in sorted(
-            set(input_post.normalized_caption_mentions), key=len, reverse=True
+            set(input_post.caption_mentions), key=len, reverse=True
         ):
             for mention_occurrence in find_occurrences(
                 search_caption, "@" + caption_mention
@@ -367,7 +367,7 @@ def pair_gen(
         # Hashtags in caption
         hashtag_occurrences: Set[int] = set()
         for caption_hashtag in sorted(
-            set(input_post.normalized_caption_hashtags), key=len, reverse=True
+            set(input_post.caption_hashtags), key=len, reverse=True
         ):
             for hashtag_occurrence in find_occurrences(
                 search_caption, "#" + caption_hashtag
