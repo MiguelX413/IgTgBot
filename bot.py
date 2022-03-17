@@ -57,7 +57,7 @@ class NormalizedPost(Post):
         if not self.caption:
             return []
         mention_regex = re.compile(
-            r"(?:^|\W|_)(?:@)(\w(?:(?:\w|(?:\.(?!\.))){0,28}(?:\w))?)"
+            r"(?:^|\W|_)(?:@)(\w(?:(?:\w|(?:\.(?!\.))){0,28}(?:\w))?)", re.ASCII
         )
         return re.findall(mention_regex, self.caption.lower())
 
