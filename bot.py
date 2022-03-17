@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import logging
 import os
-from uuid import uuid4
+import re
 from typing import NamedTuple, List, Union, Dict, Set, Optional
 from unicodedata import normalize
-import re
+from uuid import uuid4
 
-
+from instaloader import Instaloader, Post, Profile
 from telegram import (
     InlineQueryResultArticle,
     InlineQueryResultPhoto,
@@ -26,8 +26,6 @@ from telegram.ext import (
     MessageHandler,
     Filters,
 )
-
-from instaloader import Instaloader, Post, Profile
 
 
 class NormalizedPost(Post):
