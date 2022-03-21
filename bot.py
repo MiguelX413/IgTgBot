@@ -351,7 +351,7 @@ def pair_gen(
 
 
 def start(update: Update, _: CallbackContext) -> None:
-    update.message.reply_text("Hi, lmao")
+    update.message.reply_text("Hi, lmao", quote=True)
 
 
 def inlinequery(update: Update, context: CallbackContext) -> None:
@@ -456,64 +456,65 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
     update.inline_query.answer(results, cache_time=30)
 
 
-def reply(update: Update, context: CallbackContext) -> None:
+def posts(update: Update, context: CallbackContext) -> None:
     """Replies to messages in DMs."""
     logging.info(str(update.message))
     ig_post: bool = True
     if (update.message.from_user.id in whitelist) or (args.whitelisttoggle is False):
-        shortcode: str = update.message.text
-        if ig_post:
-            post: Post = Post.from_shortcode(L.context, shortcode)
-            logging.info(str(post))
+        if len(context.args) >= 1:
+            shortcode: str = context.args[0]
+            if ig_post:
+                post: Post = Post.from_shortcode(L.context, shortcode)
+                logging.info(str(post))
 
-            if post.typename == "GraphSidecar":
-                counter: int = 0
-                media_group: List[Union[InputMediaPhoto, InputMediaVideo]] = []
-                for node in post.get_sidecar_nodes():
-                    pair = pair_gen(post, counter)
-                    if node.is_video is not True:
-                        media_group.append(
-                            InputMediaPhoto(
-                                media=node.display_url,
-                                caption=pair.caption,
-                                caption_entities=pair.entities,
+                if post.typename == "GraphSidecar":
+                    counter: int = 0
+                    media_group: List[Union[InputMediaPhoto, InputMediaVideo]] = []
+                    for node in post.get_sidecar_nodes():
+                        pair = pair_gen(post, counter)
+                        if node.is_video is not True:
+                            media_group.append(
+                                InputMediaPhoto(
+                                    media=node.display_url,
+                                    caption=pair.caption,
+                                    caption_entities=pair.entities,
+                                )
                             )
-                        )
-                    else:
-                        media_group.append(
-                            InputMediaVideo(
-                                media=node.video_url,
-                                caption=pair.caption,
-                                caption_entities=pair.entities,
+                        else:
+                            media_group.append(
+                                InputMediaVideo(
+                                    media=node.video_url,
+                                    caption=pair.caption,
+                                    caption_entities=pair.entities,
+                                )
                             )
-                        )
-                    counter += 1
-                for input_medium in media_group:
-                    logging.info(input_medium)
-                update.message.reply_media_group(
-                    media=media_group,
-                    quote=True,
-                )
-
-            elif post.typename in ("GraphImage", "GraphVideo"):
-                pair = pair_gen(post)
-                if post.typename == "GraphImage":
-                    update.message.reply_photo(
-                        photo=post.url,
+                        counter += 1
+                    for input_medium in media_group:
+                        logging.info(input_medium)
+                    update.message.reply_media_group(
+                        media=media_group,
                         quote=True,
-                        caption=pair.caption,
-                        caption_entities=pair.entities,
                     )
 
-                elif post.typename == "GraphVideo":
-                    update.message.reply_video(
-                        video=post.video_url,
-                        quote=True,
-                        caption=pair.caption,
-                        caption_entities=pair.entities,
-                    )
-        else:
-            update.message.reply_text("Not an Instagram post", quote=True)
+                elif post.typename in ("GraphImage", "GraphVideo"):
+                    pair = pair_gen(post)
+                    if post.typename == "GraphImage":
+                        update.message.reply_photo(
+                            photo=post.url,
+                            quote=True,
+                            caption=pair.caption,
+                            caption_entities=pair.entities,
+                        )
+
+                    elif post.typename == "GraphVideo":
+                        update.message.reply_video(
+                            video=post.video_url,
+                            quote=True,
+                            caption=pair.caption,
+                            caption_entities=pair.entities,
+                        )
+            else:
+                update.message.reply_text("Not an Instagram post", quote=True)
     else:
         update.message.reply_text("Unauthorized user", quote=True)
 
@@ -523,10 +524,9 @@ def main(token: str) -> None:
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("p", posts))
 
     dispatcher.add_handler(InlineQueryHandler(inlinequery))
-
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, reply))
 
     updater.start_polling()
     updater.idle()
