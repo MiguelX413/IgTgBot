@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import logging
 import os
-from typing import NamedTuple, List, Union, Dict, Set
+from typing import NamedTuple, List, Optional, Union, Dict, Set
 from uuid import uuid4
 
 from instaloader import Instaloader, Post, Profile
@@ -24,9 +24,35 @@ from telegram.ext import (
 )
 
 
+def utf16len(string: str) -> int:
+    return len(string.encode("UTF-16-le")) // 2
+
+
 class Pair(NamedTuple):
-    caption: str = ""
-    entities: List[MessageEntity] = []
+    long_caption: str = ""
+    long_entities: List[MessageEntity] = []
+
+    @property
+    def short_caption(self) -> str:
+        if len(self.long_caption) > 1024:
+            return self.long_caption[0:1023] + "…"
+        else:
+            return self.long_caption
+
+    @property
+    def short_entities(self) -> List[MessageEntity]:
+        short_entities: List[MessageEntity] = []
+        for entity in self.long_entities:
+            if (
+                len(
+                    self.long_caption.encode("UTF-16-le")[
+                        0 : 2 * (entity.offset + entity.length)
+                    ].decode("UTF-16-le")
+                )
+                <= 1024
+            ):
+                short_entities.append(entity)
+        return short_entities
 
 
 def find_occurrences(string: str, substring: str) -> Set[int]:
@@ -146,12 +172,9 @@ if __name__ == "__main__":
             L.interactive_login(IG_user)
         L.save_session_to_file()
 
+
 # def parse_for_shortcodes(text: str) -> list:
 #    return
-
-
-def utf16len(string: str) -> int:
-    return len(string.encode("UTF-16-le")) // 2
 
 
 emojis: Dict[str, str] = {
@@ -374,8 +397,8 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                             photo_url=node.display_url,
                             thumb_url=node.display_url,
                             title="",
-                            caption=pair.caption,
-                            caption_entities=pair.entities,
+                            caption=pair.short_caption,
+                            caption_entities=pair.short_entities,
                         )
                     )
 
@@ -387,8 +410,8 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                             mime_type="video/mp4",
                             thumb_url=node.display_url,
                             title="Video",
-                            caption=pair.caption,
-                            caption_entities=pair.entities,
+                            caption=pair.short_caption,
+                            caption_entities=pair.short_entities,
                         )
                     )
                 results.append(
@@ -396,8 +419,8 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                         id=str(uuid4()),
                         title="URL",
                         input_message_content=InputTextMessageContent(
-                            pair.caption,
-                            entities=pair.entities,
+                            pair.short_caption,
+                            entities=pair.short_entities,
                         ),
                         thumb_url=node.display_url,
                     )
@@ -413,8 +436,8 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                         title="",
                         photo_url=post.url,
                         thumb_url=post.url,
-                        caption=pair.caption,
-                        caption_entities=pair.entities,
+                        caption=pair.short_caption,
+                        caption_entities=pair.short_entities,
                     )
                 )
 
@@ -426,8 +449,8 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                         video_url=post.video_url,
                         thumb_url=post.url,
                         mime_type="video/mp4",
-                        caption=pair.caption,
-                        caption_entities=pair.entities,
+                        caption=pair.short_caption,
+                        caption_entities=pair.short_entities,
                     )
                 )
             results.append(
@@ -435,8 +458,8 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                     id=str(uuid4()),
                     title="URL",
                     input_message_content=InputTextMessageContent(
-                        pair.caption,
-                        entities=pair.entities,
+                        pair.short_caption,
+                        entities=pair.short_entities,
                     ),
                     thumb_url=post.url,
                 )
@@ -474,42 +497,51 @@ def posts(update: Update, context: CallbackContext) -> None:
                             media_group.append(
                                 InputMediaPhoto(
                                     media=node.display_url,
-                                    caption=pair.caption,
-                                    caption_entities=pair.entities,
+                                    caption=pair.short_caption,
+                                    caption_entities=pair.short_entities,
                                 )
                             )
                         else:
                             media_group.append(
                                 InputMediaVideo(
                                     media=node.video_url,
-                                    caption=pair.caption,
-                                    caption_entities=pair.entities,
+                                    caption=pair.short_caption,
+                                    caption_entities=pair.short_entities,
                                 )
                             )
                         counter += 1
                     for input_medium in media_group:
                         logging.info(input_medium)
-                    update.message.reply_media_group(
+                    first_reply = update.message.reply_media_group(
                         media=media_group,
                         quote=True,
                     )
+                    pair = pair_gen(post)
+                    if len(pair.long_caption) > 1024:
+                        first_reply[post.mediacount - 1].reply_text(
+                            pair.long_caption, entities=pair.long_entities, quote=True
+                        )
 
                 elif post.typename in ("GraphImage", "GraphVideo"):
                     pair = pair_gen(post)
                     if post.typename == "GraphImage":
-                        update.message.reply_photo(
+                        first_reply = update.message.reply_photo(
                             photo=post.url,
                             quote=True,
-                            caption=pair.caption,
-                            caption_entities=pair.entities,
+                            caption=pair.short_caption,
+                            caption_entities=pair.short_entities,
                         )
 
                     elif post.typename == "GraphVideo":
-                        update.message.reply_video(
+                        first_reply = update.message.reply_video(
                             video=post.video_url,
                             quote=True,
-                            caption=pair.caption,
-                            caption_entities=pair.entities,
+                            caption=pair.short_caption,
+                            caption_entities=pair.short_entities,
+                        )
+                    if len(pair.long_caption) > 1024:
+                        first_reply.reply_text(
+                            pair.long_caption, entities=pair.long_entities, quote=True
                         )
             else:
                 update.message.reply_text("Not an Instagram post", quote=True)
@@ -531,5 +563,4 @@ def main(token: str) -> None:
 
 
 if __name__ == "__main__":
-
     main(args.token)
