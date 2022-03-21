@@ -38,6 +38,15 @@ def utf16len(string: str) -> int:
     return len(string.encode("UTF-16-le")) // 2
 
 
+def find_occurrences(string: str, substring: str) -> Set[int]:
+    offsets: Set[int] = set()
+    pos: int = string.find(substring)
+    while pos != -1:
+        offsets.add(pos)
+        pos = string.find(substring, pos + 1)
+    return offsets
+
+
 class Pair(NamedTuple):
     long_caption: str = ""
     long_entities: List[MessageEntity] = []
@@ -249,15 +258,6 @@ class Pair(NamedTuple):
             ):
                 short_entities.append(entity)
         return short_entities
-
-
-def find_occurrences(string: str, substring: str) -> Set[int]:
-    offsets: Set[int] = set()
-    pos: int = string.find(substring)
-    while pos != -1:
-        offsets.add(pos)
-        pos = string.find(substring, pos + 1)
-    return offsets
 
 
 if __name__ == "__main__":
