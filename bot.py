@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import logging
 import os
-from typing import NamedTuple, List, Optional, Union, Dict, Set
+from typing import NamedTuple, List, Union, Dict, Set
 from uuid import uuid4
 
 from instaloader import Instaloader, Post, Profile
