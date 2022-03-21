@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 import logging
 import os
-import re
-from typing import NamedTuple, List, Union, Dict, Set, Optional
-from unicodedata import normalize
+from typing import NamedTuple, List, Union, Dict, Set
 from uuid import uuid4
 
 from instaloader import Instaloader, Post, Profile
@@ -26,40 +24,6 @@ from telegram.ext import (
     MessageHandler,
     Filters,
 )
-
-
-class NormalizedPost(Post):
-    @property
-    def caption(self) -> Optional[str]:
-        """Caption."""
-        if (
-            "edge_media_to_caption" in self._node
-            and self._node["edge_media_to_caption"]["edges"]
-        ):
-            return normalize(
-                "NFC", self._node["edge_media_to_caption"]["edges"][0]["node"]["text"]
-            )
-        elif "caption" in self._node:
-            return normalize("NFC", self._node["caption"])
-        return None
-
-    @property
-    def caption_hashtags(self) -> List[str]:
-        """List of all lowercased hashtags (without preceeding #) that occur in the Post's caption."""
-        if not self.caption:
-            return []
-        hashtag_regex = re.compile(r"(?:#)(\w(?:(?:\w|(?:\.(?!\.))){0,28}(?:\w))?)")
-        return re.findall(hashtag_regex, self.caption.lower())
-
-    @property
-    def caption_mentions(self) -> List[str]:
-        """List of all lowercased profiles that are mentioned in the Post's caption, without preceeding @."""
-        if not self.caption:
-            return []
-        mention_regex = re.compile(
-            r"(?:^|\W|_)(?:@)(\w(?:(?:\w|(?:\.(?!\.))){0,28}(?:\w))?)", re.ASCII
-        )
-        return re.findall(mention_regex, self.caption.lower())
 
 
 class Pair(NamedTuple):
@@ -203,7 +167,7 @@ emojis: Dict[str, str] = {
 
 
 def pair_gen(
-    input_post: NormalizedPost,
+    input_post: Post,
     counter: int = None,
 ) -> Pair:
     # Initializing
@@ -398,7 +362,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
     ):
         results: List[InlineQueryResult] = []
         shortcode: str = update.inline_query.query
-        post: NormalizedPost = NormalizedPost.from_shortcode(L.context, shortcode)
+        post: Post = Post.from_shortcode(L.context, shortcode)
         logging.info(post.typename)
         logging.info(post.mediacount)
         if post.typename == "GraphSidecar":
@@ -499,7 +463,7 @@ def reply(update: Update, context: CallbackContext) -> None:
     if (update.message.from_user.id in whitelist) or (args.whitelisttoggle is False):
         shortcode: str = update.message.text
         if ig_post:
-            post: NormalizedPost = NormalizedPost.from_shortcode(L.context, shortcode)
+            post: Post = Post.from_shortcode(L.context, shortcode)
             logging.info(str(post))
 
             if post.typename == "GraphSidecar":
