@@ -494,6 +494,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                     thumb_url=post.url,
                 )
             )
+        update.inline_query.answer(results, cache_time=21600, is_personal=False)
 
     else:
         results = [
@@ -503,8 +504,9 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                 input_message_content=InputTextMessageContent("Unauthorized user"),
             )
         ]
+        update.inline_query.answer(results, cache_time=300)
 
-    update.inline_query.answer(results, cache_time=43200)
+
 
 
 def posts(update: Update, context: CallbackContext) -> None:
