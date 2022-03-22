@@ -507,8 +507,6 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
         update.inline_query.answer(results, cache_time=300)
 
 
-
-
 def posts(update: Update, context: CallbackContext) -> None:
     """Replies to messages in DMs."""
     logging.info(str(update.message))
