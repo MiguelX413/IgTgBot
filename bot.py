@@ -106,6 +106,10 @@ class Pairs(NamedTuple):
             )
         )
 
+        # Title
+        if input_post.title not in (None, ""):
+            caption += input_post.title + "\n"
+
         # Sponsor(s)
         if input_post.is_sponsored:
             caption += "Sponsors:"
