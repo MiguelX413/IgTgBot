@@ -504,7 +504,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
             )
         ]
 
-    update.inline_query.answer(results, cache_time=300)
+    update.inline_query.answer(results, cache_time=43200)
 
 
 def posts(update: Update, context: CallbackContext) -> None:
