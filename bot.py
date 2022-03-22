@@ -426,7 +426,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                             id=str(uuid4()),
                             photo_url=node.display_url,
                             thumb_url=node.display_url,
-                            title="",
+                            title="Photo",
                             caption=pairs.short_caption,
                             caption_entities=pairs.short_entities,
                         )
@@ -459,11 +459,11 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
 
         elif post.typename in ("GraphImage", "GraphVideo"):
             pairs = Pairs.from_post(post)
-            if post.typename == "Graphimage":
+            if post.typename == "GraphImage":
                 results.append(
                     InlineQueryResultPhoto(
                         id=str(uuid4()),
-                        title="",
+                        title="Photo",
                         photo_url=post.url,
                         thumb_url=post.url,
                         caption=pairs.short_caption,
@@ -504,7 +504,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
             )
         ]
 
-    update.inline_query.answer(results, cache_time=30)
+    update.inline_query.answer(results, cache_time=300)
 
 
 def posts(update: Update, context: CallbackContext) -> None:
