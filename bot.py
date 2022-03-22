@@ -292,13 +292,13 @@ if __name__ == "__main__":
     import argparse
 
     parser: argparse.ArgumentParser = argparse.ArgumentParser(description="Runs TG bot")
-    parser.add_argument(
-        "token",
-        action="store",
-        default=os.environ["TG_TOKEN"] if "TG_TOKEN" in os.environ else None,
-        type=str,
-        help="Telegram Token for the bot",
-    )
+    if "TG_TOKEN" not in os.environ:
+        parser.add_argument(
+            "token",
+            action="store",
+            type=str,
+            help="Telegram Token for the bot",
+        )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--uid",
