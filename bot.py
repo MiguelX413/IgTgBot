@@ -15,12 +15,7 @@ from telegram import (
     InputMediaPhoto,
     InputMediaVideo,
 )
-from telegram.ext import (
-    Updater,
-    InlineQueryHandler,
-    CommandHandler,
-    CallbackContext,
-)
+from telegram.ext import Updater, InlineQueryHandler, CommandHandler, CallbackContext
 
 from structures import Pairs
 
