@@ -14,6 +14,12 @@ emojis: Dict[str, str] = {
 }
 
 
+class PatchedPost(Post):
+    @property
+    def context(self):
+        return self._context
+
+
 def utf16len(string: str) -> int:
     return len(string.encode("UTF-16-le")) // 2
 
@@ -32,7 +38,7 @@ class Pairs(NamedTuple):
     long_entities: List[MessageEntity] = []
 
     @classmethod
-    def from_post(cls, input_post: Post, counter: int = None):
+    def from_post(cls, input_post: PatchedPost, counter: int = None):
         """Create a Pair object from a given post"""
         # Initializing
         caption: str = ""

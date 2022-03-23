@@ -4,7 +4,7 @@ import os
 from typing import List, Union, Set
 from uuid import uuid4
 
-from instaloader import Instaloader, Post
+from instaloader import Instaloader
 from telegram import (
     InlineQueryResultArticle,
     InlineQueryResultPhoto,
@@ -17,7 +17,7 @@ from telegram import (
 )
 from telegram.ext import Updater, InlineQueryHandler, CommandHandler, CallbackContext
 
-from structures import Pairs
+from structures import PatchedPost, Pairs
 
 if __name__ == "__main__":
     import argparse
@@ -144,7 +144,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
     ):
         results: List[InlineQueryResult] = []
         shortcode: str = update.inline_query.query
-        post: Post = Post.from_shortcode(L.context, shortcode)
+        post: PatchedPost = PatchedPost.from_shortcode(L.context, shortcode)
         logging.info(post.typename)
         logging.info(post.mediacount)
         if post.typename == "GraphSidecar":
@@ -246,7 +246,7 @@ def posts(update: Update, context: CallbackContext) -> None:
         if len(context.args) >= 1:
             shortcode: str = context.args[0]
             if ig_post:
-                post: Post = Post.from_shortcode(L.context, shortcode)
+                post: PatchedPost = PatchedPost.from_shortcode(L.context, shortcode)
                 logging.info(str(post))
 
                 if post.typename == "GraphSidecar":
