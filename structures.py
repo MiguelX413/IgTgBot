@@ -71,30 +71,18 @@ class Pairs(NamedTuple):
             MessageEntity(
                 type="text_link",
                 offset=utf16len(caption),
-                length=utf16len("@" + input_post.owner_username),
-                url="https://instagram.com/" + input_post.owner_username + "/",
+                length=utf16len(f"@{input_post.owner_username}"),
+                url=f"https://instagram.com/{input_post.owner_username}/",
             )
         )
-        caption += (
-            "@"
-            + input_post.owner_username
-            + " ("
-            + str(input_post.owner_id)
-            + ")"
-            + ": "
-            + "https://instagram.com/p/"
-            + input_post.shortcode
-            + "/"
-            + (
-                (" " + str(counter + 1) + "/" + str(input_post.mediacount) + "\n")
-                if counter is not None
-                else "\n"
-            )
-        )
+        caption += f"@{input_post.owner_username} ({str(input_post.owner_id)}): https://instagram.com/p/{input_post.shortcode}/"
+        if counter is not None:
+            caption += f" {str(counter+1)}/{str(input_post.mediacount)}"
+        caption += "\n"
 
         # Title
         if input_post.title not in (None, ""):
-            caption += input_post.title + "\n"
+            caption += f"{input_post.title}\n"
 
         # Sponsor(s)
         if input_post.is_sponsored:
@@ -105,13 +93,12 @@ class Pairs(NamedTuple):
                     MessageEntity(
                         type="text_link",
                         offset=utf16len(caption),
-                        length=utf16len("@" + sponsor_user.username),
-                        url="https://instagram.com/" + sponsor_user.username + "/",
+                        length=utf16len(f"@{sponsor_user.username}"),
+                        url=f"https://instagram.com/{sponsor_user.username}/",
                     )
                 )
-                caption += (
-                    "@" + sponsor_user.username + " (" + str(sponsor_user.userid) + ")"
-                )
+                caption += f"@{sponsor_user.username} ({str(sponsor_user.userid)})"
+
             caption += "\n"
 
         # Tagged Users
@@ -123,17 +110,11 @@ class Pairs(NamedTuple):
                     MessageEntity(
                         type="text_link",
                         offset=utf16len(caption),
-                        length=utf16len("@" + tagged_user),
-                        url="https://instagram.com/" + tagged_user + "/",
+                        length=utf16len(f"@{tagged_user}"),
+                        url=f"https://instagram.com/{tagged_user}/",
                     )
                 )
-                caption += (
-                    "@"
-                    + tagged_user
-                    + " ("
-                    + str(Profile.from_username(input_post.context, tagged_user).userid)
-                    + ")"
-                )
+                caption += f"@{tagged_user} ({str(Profile.from_username(input_post.context, tagged_user).userid)})"
             caption += "\n"
 
         # Location
@@ -143,37 +124,26 @@ class Pairs(NamedTuple):
                     type="text_link",
                     offset=utf16len(caption + emojis["location"]),
                     length=utf16len(str(input_post.location.name)),
-                    url="https://instagram.com/explore/locations/"
-                    + str(input_post.location.id)
-                    + "/",
+                    url=f"https://instagram.com/explore/locations/{str(input_post.location.id)}/",
                 )
             )
-            caption += emojis["location"] + str(input_post.location.name) + "\n"
+            caption += f"{emojis['location']}{str(input_post.location.name)}\n"
 
         # Views, Likes, and Comments
         if input_post.is_video:
-            caption += emojis["eyes"] + str(input_post.video_view_count) + " "
+            caption += f"{emojis['eyes']}{str(input_post.video_view_count)} "
         entities.append(
             MessageEntity(
                 type="text_link",
                 offset=utf16len(caption + emojis["heart"]),
                 length=utf16len(str(input_post.likes)),
-                url="https://instagram.com/p/" + input_post.shortcode + "/liked_by/",
+                url=f"https://instagram.com/p/{input_post.shortcode}/liked_by/",
             )
         )
-        caption += (
-            emojis["heart"]
-            + str(input_post.likes)
-            + " "
-            + emojis["comments"]
-            + str(input_post.comments)
-            + "\n"
-        )
+        caption += f"{emojis['heart']}{str(input_post.likes)} {emojis['comments']}{str(input_post.comments)}\n"
 
         # Date
-        caption += (
-            emojis["calendar"] + f"{input_post.date_utc:%Y-%m-%d %H:%M:%S}" + "\n"
-        )
+        caption += f"{emojis['calendar']}{input_post.date_utc:%Y-%m-%d %H:%M:%S}\n"
 
         # Post Caption
         if input_post.caption is not None:
@@ -191,15 +161,15 @@ class Pairs(NamedTuple):
                 set(input_post.caption_mentions), key=len, reverse=True
             ):
                 for mention_occurrence in find_occurrences(
-                    search_caption, "@" + caption_mention
+                    search_caption, f"@{caption_mention}"
                 ):
                     if mention_occurrence not in mention_occurrences:
                         entities.append(
                             MessageEntity(
                                 type="text_link",
                                 offset=utf16len(caption[0:mention_occurrence]),
-                                length=utf16len("@" + caption_mention),
-                                url="https://instagram.com/" + caption_mention + "/",
+                                length=utf16len(f"@{caption_mention}"),
+                                url=f"https://instagram.com/{caption_mention}/",
                             )
                         )
                     mention_occurrences.add(mention_occurrence)
@@ -210,17 +180,15 @@ class Pairs(NamedTuple):
                 set(input_post.caption_hashtags), key=len, reverse=True
             ):
                 for hashtag_occurrence in find_occurrences(
-                    search_caption, "#" + caption_hashtag
+                    search_caption, f"#{caption_hashtag}"
                 ):
                     if hashtag_occurrence not in hashtag_occurrences:
                         entities.append(
                             MessageEntity(
                                 type="text_link",
                                 offset=utf16len(caption[0:hashtag_occurrence]),
-                                length=utf16len("#" + caption_hashtag),
-                                url="https://instagram.com/explore/tags/"
-                                + caption_hashtag
-                                + "/",
+                                length=utf16len(f"#{caption_hashtag}"),
+                                url=f"https://instagram.com/explore/tags/{caption_hashtag}/",
                             )
                         )
                     hashtag_occurrences.add(hashtag_occurrence)

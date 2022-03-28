@@ -112,7 +112,7 @@ if __name__ == "__main__":
         logging.info("No authorized users specified")
     else:
         whitelist.update(args.uid)
-        logging.info("Authorized users: " + str(whitelist))
+        logging.info(f"Authorized users: {str(whitelist)}")
 
     L = Instaloader()
     if args.login is not False:
