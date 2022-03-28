@@ -75,9 +75,9 @@ class Pairs(NamedTuple):
                 url=f"https://instagram.com/{input_post.owner_username}/",
             )
         )
-        caption += f"@{input_post.owner_username} ({str(input_post.owner_id)}): https://instagram.com/p/{input_post.shortcode}/"
+        caption += f"@{input_post.owner_username} ({input_post.owner_id}): https://instagram.com/p/{input_post.shortcode}/"
         if counter is not None:
-            caption += f" {str(counter+1)}/{str(input_post.mediacount)}"
+            caption += f" {counter + 1}/{input_post.mediacount}"
         caption += "\n"
 
         # Title
@@ -97,7 +97,7 @@ class Pairs(NamedTuple):
                         url=f"https://instagram.com/{sponsor_user.username}/",
                     )
                 )
-                caption += f"@{sponsor_user.username} ({str(sponsor_user.userid)})"
+                caption += f"@{sponsor_user.username} ({sponsor_user.userid})"
 
             caption += "\n"
 
@@ -114,7 +114,7 @@ class Pairs(NamedTuple):
                         url=f"https://instagram.com/{tagged_user}/",
                     )
                 )
-                caption += f"@{tagged_user} ({str(Profile.from_username(input_post.context, tagged_user).userid)})"
+                caption += f"@{tagged_user} ({Profile.from_username(input_post.context, tagged_user).userid})"
             caption += "\n"
 
         # Location
@@ -123,15 +123,15 @@ class Pairs(NamedTuple):
                 MessageEntity(
                     type="text_link",
                     offset=utf16len(caption + emojis["location"]),
-                    length=utf16len(str(input_post.location.name)),
-                    url=f"https://instagram.com/explore/locations/{str(input_post.location.id)}/",
+                    length=utf16len(input_post.location.name),
+                    url=f"https://instagram.com/explore/locations/{input_post.location.id}/",
                 )
             )
-            caption += f"{emojis['location']}{str(input_post.location.name)}\n"
+            caption += f"{emojis['location']}{input_post.location.name}\n"
 
         # Views, Likes, and Comments
         if input_post.is_video:
-            caption += f"{emojis['eyes']}{str(input_post.video_view_count)} "
+            caption += f"{emojis['eyes']}{input_post.video_view_count} "
         entities.append(
             MessageEntity(
                 type="text_link",
@@ -140,7 +140,7 @@ class Pairs(NamedTuple):
                 url=f"https://instagram.com/p/{input_post.shortcode}/liked_by/",
             )
         )
-        caption += f"{emojis['heart']}{str(input_post.likes)} {emojis['comments']}{str(input_post.comments)}\n"
+        caption += f"{emojis['heart']}{input_post.likes} {emojis['comments']}{input_post.comments}\n"
 
         # Date
         caption += f"{emojis['calendar']}{input_post.date_utc:%Y-%m-%d %H:%M:%S}\n"
