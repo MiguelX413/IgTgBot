@@ -1,2 +1,2 @@
-instaloader==4.8.5
-python-telegram-bot~=13.11
+instaloader==4.9
+python-telegram-bot==13.11
