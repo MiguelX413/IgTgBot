@@ -32,7 +32,13 @@ class PatchedPost(Post):
         """List of all user profiles that are tagged in the Post."""
         try:
             return [
-                TaggedUser(edge["node"]["user"]["full_name"], edge["node"]["user"]["id"], edge["node"]["user"]["is_verified"], edge["node"]["user"]["profile_pic_url"], edge["node"]["user"]["username"])
+                TaggedUser(
+                    edge["node"]["user"]["full_name"],
+                    edge["node"]["user"]["id"],
+                    edge["node"]["user"]["is_verified"],
+                    edge["node"]["user"]["profile_pic_url"],
+                    edge["node"]["user"]["username"],
+                )
                 for edge in self._field("edge_media_to_tagged_user", "edges")
             ]
         except KeyError:
