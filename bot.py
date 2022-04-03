@@ -149,8 +149,9 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
         logging.info(post.mediacount)
         if post.typename == "GraphSidecar":
             counter: int = 0
+            pairs = Pairs(post)
             for node in post.get_sidecar_nodes():
-                pairs = Pairs.from_post(post, counter)
+                short = pairs.short(counter)
                 if node.is_video is not True:
                     results.append(
                         InlineQueryResultPhoto(
@@ -158,8 +159,8 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                             photo_url=node.display_url,
                             thumb_url=node.display_url,
                             title="Photo",
-                            caption=pairs.short_caption,
-                            caption_entities=pairs.short_entities,
+                            caption=short.caption,
+                            caption_entities=short.entities,
                         )
                     )
 
@@ -171,8 +172,8 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                             mime_type="video/mp4",
                             thumb_url=node.display_url,
                             title="Video",
-                            caption=pairs.short_caption,
-                            caption_entities=pairs.short_entities,
+                            caption=short.caption,
+                            caption_entities=short.entities,
                         )
                     )
                 results.append(
@@ -180,8 +181,8 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                         id=str(uuid4()),
                         title="URL",
                         input_message_content=InputTextMessageContent(
-                            pairs.short_caption,
-                            entities=pairs.short_entities,
+                            short.caption,
+                            entities=short.entities,
                         ),
                         thumb_url=node.display_url,
                     )
@@ -189,7 +190,8 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                 counter += 1
 
         elif post.typename in ("GraphImage", "GraphVideo"):
-            pairs = Pairs.from_post(post)
+            pairs = Pairs(post)
+            short = pairs.short()
             if post.typename == "GraphImage":
                 results.append(
                     InlineQueryResultPhoto(
@@ -197,8 +199,8 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                         title="Photo",
                         photo_url=post.url,
                         thumb_url=post.url,
-                        caption=pairs.short_caption,
-                        caption_entities=pairs.short_entities,
+                        caption=short.caption,
+                        caption_entities=short.entities,
                     )
                 )
 
@@ -210,8 +212,8 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                         video_url=post.video_url,
                         thumb_url=post.url,
                         mime_type="video/mp4",
-                        caption=pairs.short_caption,
-                        caption_entities=pairs.short_entities,
+                        caption=short.caption,
+                        caption_entities=short.entities,
                     )
                 )
             results.append(
@@ -219,8 +221,8 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                     id=str(uuid4()),
                     title="URL",
                     input_message_content=InputTextMessageContent(
-                        pairs.short_caption,
-                        entities=pairs.short_entities,
+                        short.caption,
+                        entities=short.entities,
                     ),
                     thumb_url=post.url,
                 )
@@ -250,24 +252,25 @@ def posts(update: Update, context: CallbackContext) -> None:
                 logging.info(str(post))
 
                 if post.typename == "GraphSidecar":
+                    pairs = Pairs(post)
                     counter: int = 0
                     media_group: List[Union[InputMediaPhoto, InputMediaVideo]] = []
                     for node in post.get_sidecar_nodes():
-                        pairs = Pairs.from_post(post, counter)
+                        short = pairs.short(counter)
                         if node.is_video is not True:
                             media_group.append(
                                 InputMediaPhoto(
                                     media=node.display_url,
-                                    caption=pairs.short_caption,
-                                    caption_entities=pairs.short_entities,
+                                    caption=short.caption,
+                                    caption_entities=short.entities,
                                 )
                             )
                         else:
                             media_group.append(
                                 InputMediaVideo(
                                     media=node.video_url,
-                                    caption=pairs.short_caption,
-                                    caption_entities=pairs.short_entities,
+                                    caption=short.caption,
+                                    caption_entities=short.entities,
                                 )
                             )
                         counter += 1
@@ -277,32 +280,35 @@ def posts(update: Update, context: CallbackContext) -> None:
                         media=media_group,
                         quote=True,
                     )
-                    pairs = Pairs.from_post(post)
-                    if len(pairs.long_caption + f" {1}/{post.mediacount}") > 1024:
+
+                    if len(pairs.long(0).caption) > 1024:
+                        long = pairs.long()
                         first_reply[post.mediacount - 1].reply_text(
-                            pairs.long_caption, entities=pairs.long_entities, quote=True
+                            long.caption, entities=long.entities, quote=True
                         )
 
                 elif post.typename in ("GraphImage", "GraphVideo"):
-                    pairs = Pairs.from_post(post)
+                    pairs = Pairs(post)
+                    short = pairs.short()
                     if post.typename == "GraphImage":
                         first_reply = update.message.reply_photo(
                             photo=post.url,
                             quote=True,
-                            caption=pairs.short_caption,
-                            caption_entities=pairs.short_entities,
+                            caption=short.caption,
+                            caption_entities=short.entities,
                         )
 
                     elif post.typename == "GraphVideo":
                         first_reply = update.message.reply_video(
                             video=post.video_url,
                             quote=True,
-                            caption=pairs.short_caption,
-                            caption_entities=pairs.short_entities,
+                            caption=short.caption,
+                            caption_entities=short.entities,
                         )
-                    if len(pairs.long_caption) > 1024:
+                    long = pairs.long()
+                    if len(long.caption) > 1024:
                         first_reply.reply_text(
-                            pairs.long_caption, entities=pairs.long_entities, quote=True
+                            long.caption, entities=long.entities, quote=True
                         )
             else:
                 update.message.reply_text("Not an Instagram post", quote=True)
