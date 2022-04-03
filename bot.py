@@ -278,7 +278,7 @@ def posts(update: Update, context: CallbackContext) -> None:
                         quote=True,
                     )
                     pairs = Pairs.from_post(post)
-                    if len(pairs.long_caption) > 1024:
+                    if len(pairs.long_caption + f" {1}/{post.mediacount}") > 1024:
                         first_reply[post.mediacount - 1].reply_text(
                             pairs.long_caption, entities=pairs.long_entities, quote=True
                         )

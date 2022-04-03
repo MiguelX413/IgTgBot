@@ -224,23 +224,23 @@ class Pairs(NamedTuple):
                 ):
                     short_entities.append(
                         MessageEntity(
-                            long_entity.type,
-                            long_entity.offset,
-                            len(
+                            type=long_entity.type,
+                            offset=long_entity.offset,
+                            length=utf16len(
                                 self.long_caption[:1023]
                                 .encode("UTF-16-le")[2 * long_entity.offset :]
                                 .decode("UTF-16-le")
                             ),
-                            long_entity.url,
+                            url=long_entity.url,
                         )
                     )
             else:
                 short_entities.append(
                     MessageEntity(
-                        long_entity.type,
-                        long_entity.offset,
-                        long_entity.length,
-                        long_entity.url,
+                        type=long_entity.type,
+                        offset=long_entity.offset,
+                        length=long_entity.length,
+                        url=long_entity.url,
                     )
                 )
         return short_entities
