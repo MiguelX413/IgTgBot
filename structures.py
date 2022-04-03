@@ -14,10 +14,29 @@ emojis: Dict[str, str] = {
 }
 
 
+class TaggedUser(NamedTuple):
+    full_name: str
+    id: int
+    is_verified: bool
+    profile_pic_url: str
+    username: str
+
+
 class PatchedPost(Post):
     @property
     def context(self):
         return self._context
+
+    @property
+    def tagged_users(self) -> List[TaggedUser]:
+        """List of all user profiles that are tagged in the Post."""
+        try:
+            return [
+                TaggedUser(edge["node"]["user"]["full_name"], edge["node"]["user"]["id"], edge["node"]["user"]["is_verified"], edge["node"]["user"]["profile_pic_url"], edge["node"]["user"]["username"])
+                for edge in self._field("edge_media_to_tagged_user", "edges")
+            ]
+        except KeyError:
+            return []
 
 
 def utf16len(string: str) -> int:
@@ -40,14 +59,9 @@ class Pair(NamedTuple):
 
 class Pairs:
     _post: PatchedPost
-    _tagged_users: List[Profile] = []
 
     def __init__(self, post: PatchedPost):
         self._post = post
-        for tagged_user in self._post.tagged_users:
-            self._tagged_users.append(
-                Profile.from_username(self._post.context, tagged_user)
-            )
 
     def long(self, counter: int = None) -> Pair:
         """Create a Pair object from a given post"""
@@ -113,9 +127,9 @@ class Pairs:
             caption += "\n"
 
         # Tagged Users
-        if len(self._tagged_users) > 0:
+        if len(self._post.tagged_users) > 0:
             caption += emojis["person"]
-            for tagged_user in self._tagged_users:
+            for tagged_user in self._post.tagged_users:
                 caption += " "
                 entities.append(
                     MessageEntity(
@@ -125,7 +139,7 @@ class Pairs:
                         url=f"https://instagram.com/{tagged_user.username}/",
                     )
                 )
-                caption += f"@{tagged_user.username} ({tagged_user.userid})"
+                caption += f"@{tagged_user.username} ({tagged_user.id})"
             caption += "\n"
 
         # Location
