@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-from typing import NamedTuple, List, Dict, Set
+from typing import NamedTuple, List, Dict, Set, Optional
 
-from instaloader import Post, Profile
+from instaloader import Post
 from telegram import MessageEntity
 
 emojis: Dict[str, str] = {
@@ -29,7 +29,7 @@ class PatchedPost(Post):
 
     @property
     def tagged_users(self) -> List[TaggedUser]:
-        """List of all user profiles that are tagged in the Post."""
+        """List of all users that are tagged in the Post."""
         try:
             return [
                 TaggedUser(
@@ -69,7 +69,7 @@ class Pairs:
     def __init__(self, post: PatchedPost):
         self._post = post
 
-    def long(self, counter: int = None) -> Pair:
+    def long(self, counter: Optional[int] = None) -> Pair:
         """Create a Pair object from a given post"""
         # Initializing
         caption: str = ""
@@ -226,7 +226,7 @@ class Pairs:
 
         return Pair(caption, entities)
 
-    def short(self, counter: int = None) -> Pair:
+    def short(self, counter: Optional[int] = None) -> Pair:
         short_caption: str
         short_entities: List[MessageEntity] = []
         long = self.long(counter)

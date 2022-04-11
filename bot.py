@@ -146,7 +146,6 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
         shortcode: str = update.inline_query.query
         post: PatchedPost = PatchedPost.from_shortcode(L.context, shortcode)
         logging.info(post.typename)
-        logging.info(post.mediacount)
         if post.typename == "GraphSidecar":
             counter: int = 0
             pairs = Pairs(post)
