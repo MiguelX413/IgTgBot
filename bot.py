@@ -15,7 +15,13 @@ from telegram import (
     InputMediaPhoto,
     InputMediaVideo,
 )
-from telegram.ext import Updater, InlineQueryHandler, CommandHandler, CallbackContext
+from telegram.ext import (
+    Updater,
+    InlineQueryHandler,
+    CommandHandler,
+    CallbackContext,
+    Dispatcher,
+)
 
 from structures import PatchedPost, Pairs
 
@@ -79,18 +85,18 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    do_rich = True
+    DO_RICH = True
     if args.rich:
         try:
             import rich
             from rich.progress import track, Progress
             from rich.logging import RichHandler
         except ModuleNotFoundError:
-            do_rich = False
+            DO_RICH = False
     else:
-        do_rich = False
+        DO_RICH = False
 
-    if do_rich:
+    if DO_RICH:
         logging_handlers = [RichHandler(rich_tracebacks=True)]
     else:
         logging_handlers = [logging.StreamHandler()]
@@ -105,14 +111,14 @@ if __name__ == "__main__":
     )
 
     logging.info(str(args))
-    logging.info("do_rich: " + str(do_rich))
+    logging.info(f"do_rich: {DO_RICH}")
 
     whitelist: Set[int] = set()
     if args.uid is None:
         logging.info("No authorized users specified")
     else:
         whitelist.update(args.uid)
-        logging.info(f"Authorized users: {str(whitelist)}")
+        logging.info(f"Authorized users: {whitelist}")
 
     L = Instaloader()
     if args.login is not False:
@@ -317,7 +323,7 @@ def posts(update: Update, context: CallbackContext) -> None:
 
 def main(token: str) -> None:
     updater = Updater(token, use_context=True)
-    dispatcher = updater.dispatcher
+    dispatcher: Dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("p", posts))

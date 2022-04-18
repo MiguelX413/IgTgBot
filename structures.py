@@ -153,7 +153,7 @@ class Pairs:
             entities.append(
                 MessageEntity(
                     type="text_link",
-                    offset=utf16len(caption + emojis["location"]),
+                    offset=utf16len(f"{caption}{emojis['location']}"),
                     length=utf16len(self._post.location.name),
                     url=f"https://instagram.com/explore/locations/{self._post.location.id}/",
                 )
@@ -166,7 +166,7 @@ class Pairs:
         entities.append(
             MessageEntity(
                 type="text_link",
-                offset=utf16len(caption + emojis["heart"]),
+                offset=utf16len(f"{caption}{emojis['heart']}"),
                 length=utf16len(str(self._post.likes)),
                 url=f"https://instagram.com/p/{self._post.shortcode}/liked_by/",
             )
@@ -183,8 +183,8 @@ class Pairs:
 
             # Mentions + Hashtags
             search_caption = (
-                old_caption.replace("@", ",") + self._post.caption
-            ).lower()
+                f"{old_caption.replace('@', ',')}{self._post.caption}".lower()
+            )
 
             # Mentions in caption
             mention_occurrences: Set[int] = set()
@@ -232,7 +232,7 @@ class Pairs:
         long = self.long(counter)
 
         if len(long.caption) > 1024:
-            short_caption = long.caption[0:1023] + "…"
+            short_caption = f"{long.caption[0:1023]}…"
         else:
             short_caption = long.caption
 
