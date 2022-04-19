@@ -65,9 +65,10 @@ class Pair:
     def __init__(
         self, caption: str = "", entities: Optional[List[MessageEntity]] = None
     ):
-        self.caption = caption
         if entities is None:
-            self.entities = []
+            entities = []
+        self.caption = caption
+        self.entities = entities
 
     def append(
         self,

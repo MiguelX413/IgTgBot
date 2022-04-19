@@ -111,7 +111,7 @@ if __name__ == "__main__":
     )
 
     logging.info(str(args))
-    logging.info(f"do_rich: {DO_RICH}")
+    logging.info(f"DO_RICH: {DO_RICH}")
 
     whitelist: Set[int] = set()
     if args.uid is None:
