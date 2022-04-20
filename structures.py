@@ -59,8 +59,8 @@ def find_occurrences(string: str, substring: str) -> Set[int]:
 
 
 class Pair:
-    caption: str = ""
-    entities: List[MessageEntity] = []
+    caption: str
+    entities: List[MessageEntity]
 
     def __init__(
         self, caption: str = "", entities: Optional[List[MessageEntity]] = None
@@ -73,7 +73,7 @@ class Pair:
     def append(
         self,
         text: str,
-        type: Optional[str] = None,
+        type: Optional[str] = None,  # pylint: disable=W0622
         url: Optional[str] = None,
         user: Optional[User] = None,
         language: Optional[str] = None,
@@ -92,11 +92,31 @@ class Pair:
         self.caption += text
 
 
-class Pairs:
+class SuperPost:
     _post: PatchedPost
+    _media_url: str = None
 
     def __init__(self, post: PatchedPost):
         self._post = post
+
+    @property
+    def post(self) -> PatchedPost:
+        return self._post
+
+    def get_media_url(self, counter: Optional[int] = None) -> str:
+        if self._media_url is None:
+            if counter is None:
+                if self._post.typename == "GraphVideo":
+                    self._media_url = self._post.video_url
+                else:
+                    self._media_url = self._post.url
+            else:
+                node = list(self._post.get_sidecar_nodes(counter, counter))[0]
+                if node.is_video:
+                    self._media_url = node.video_url
+                else:
+                    self._media_url = node.display_url
+        return self._media_url
 
     def long(self, counter: Optional[int] = None) -> Pair:
         """Create a Pair object from a given post"""
@@ -104,18 +124,7 @@ class Pairs:
         pair = Pair()
 
         # Media URL
-        if counter is None:
-            if self._post.typename == "GraphVideo":
-                media_url = self._post.video_url
-            else:
-                media_url = self._post.url
-        else:
-            node = list(self._post.get_sidecar_nodes(counter, counter))[0]
-            if node.is_video:
-                media_url = node.video_url
-            else:
-                media_url = node.display_url
-        pair.append("Media", type="text_link", url=media_url)
+        pair.append("Media", type="text_link", url=self.get_media_url(counter))
         pair.append("\n")
 
         # Posting account and Counter
