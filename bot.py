@@ -23,7 +23,7 @@ from telegram.ext import (
     Dispatcher,
 )
 
-from structures import PatchedPost, SuperPost
+from structures import PatchedPost, Pairs
 
 if __name__ == "__main__":
     import argparse
@@ -154,7 +154,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
         logging.info(str(post.__dict__))
         if post.typename == "GraphSidecar":
             counter: int = 0
-            pairs = SuperPost(post)
+            pairs = Pairs(post)
             for node in post.get_sidecar_nodes():
                 short = pairs.short(counter)
                 if node.is_video is True:
@@ -195,7 +195,7 @@ def inlinequery(update: Update, context: CallbackContext) -> None:
                 counter += 1
 
         elif post.typename in ("GraphImage", "GraphVideo"):
-            pairs = SuperPost(post)
+            pairs = Pairs(post)
             short = pairs.short()
             if post.typename == "GraphVideo":
                 results.append(
@@ -257,7 +257,7 @@ def posts(update: Update, context: CallbackContext) -> None:
                 logging.info(str(post.__dict__))
 
                 if post.typename == "GraphSidecar":
-                    pairs = SuperPost(post)
+                    pairs = Pairs(post)
                     counter: int = 0
                     media_group: List[Union[InputMediaPhoto, InputMediaVideo]] = []
                     for node in post.get_sidecar_nodes():
@@ -293,7 +293,7 @@ def posts(update: Update, context: CallbackContext) -> None:
                         )
 
                 elif post.typename in ("GraphImage", "GraphVideo"):
-                    pairs = SuperPost(post)
+                    pairs = Pairs(post)
                     short = pairs.short()
                     if post.typename == "GraphVideo":
                         first_reply = update.message.reply_video(
