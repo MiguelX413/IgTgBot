@@ -45,6 +45,10 @@ class PatchedPost(Post):
             return []
 
 
+# def parse_for_shortcodes(text: str) -> list:
+#    return
+
+
 def utf16len(string: str) -> int:
     return len(string.encode("UTF-16-le")) // 2
 
@@ -241,7 +245,7 @@ class Pairs:
         long = self.long(counter)
 
         if len(long.caption) > 1024:
-            pair.caption = f"{long.caption[0:1023]}…"
+            pair.caption = f"{long.caption[0 : 1023]}…"
         else:
             pair.caption = long.caption
 
