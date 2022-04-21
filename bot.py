@@ -97,18 +97,18 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    DO_RICH = True
+    do_rich = True
     if args.rich:
         try:
             import rich
             from rich.progress import track, Progress
             from rich.logging import RichHandler
         except ModuleNotFoundError:
-            DO_RICH = False
+            do_rich = False
     else:
-        DO_RICH = False
+        do_rich = False
 
-    if DO_RICH:
+    if do_rich:
         logging_handlers = [RichHandler(rich_tracebacks=True)]
     else:
         logging_handlers = [logging.StreamHandler()]
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     )
 
     logging.info(str(args))
-    logging.info(f"DO_RICH: {DO_RICH}")
+    logging.info(f"do_rich: {do_rich}")
 
     if args.whitelist is None:
         user_whitelist: Optional[Set[int]] = None

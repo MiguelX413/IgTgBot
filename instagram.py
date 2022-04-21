@@ -14,9 +14,10 @@ from telegram import (
     InputMediaPhoto,
     InputMediaVideo,
 )
+from telegram.constants import MAX_CAPTION_LENGTH
 from telegram.ext import CallbackContext
 
-from structures import PatchedPost, Pairs
+from structures import PatchedPost, FormattedCaptions
 
 
 class InstagramHandler:
@@ -54,9 +55,9 @@ class InstagramHandler:
             logging.info(str(post.__dict__))
             if post.typename == "GraphSidecar":
                 counter: int = 0
-                pairs = Pairs(post)
+                formatted_captions = FormattedCaptions(post)
                 for node in post.get_sidecar_nodes():
-                    short = pairs.short(counter)
+                    short = formatted_captions.short(counter)
                     if node.is_video is True:
                         results.append(
                             InlineQueryResultVideo(
@@ -95,8 +96,8 @@ class InstagramHandler:
                     counter += 1
 
             elif post.typename in ("GraphImage", "GraphVideo"):
-                pairs = Pairs(post)
-                short = pairs.short()
+                formatted_captions = FormattedCaptions(post)
+                short = formatted_captions.short()
                 if post.typename == "GraphVideo":
                     results.append(
                         InlineQueryResultVideo(
@@ -148,7 +149,6 @@ class InstagramHandler:
         """Returns posts"""
         logging.info(str(update.message))
         ig_post: bool = True
-        print(self.whitelist)
         if (self.whitelist is None) or (update.message.from_user.id in self.whitelist):
             if len(context.args) >= 1:
                 shortcode: str = context.args[0]
@@ -159,11 +159,11 @@ class InstagramHandler:
                     logging.info(str(post.__dict__))
 
                     if post.typename == "GraphSidecar":
-                        pairs = Pairs(post)
+                        formatted_captions = FormattedCaptions(post)
                         counter: int = 0
                         media_group: List[Union[InputMediaPhoto, InputMediaVideo]] = []
                         for node in post.get_sidecar_nodes():
-                            short = pairs.short(counter)
+                            short = formatted_captions.short(counter)
                             if node.is_video is True:
                                 media_group.append(
                                     InputMediaVideo(
@@ -188,15 +188,15 @@ class InstagramHandler:
                             quote=True,
                         )
 
-                        if len(pairs.long(0).caption) > 1024:
-                            long = pairs.long()
+                        if len(formatted_captions.long(0).caption) > MAX_CAPTION_LENGTH:
+                            long = formatted_captions.long()
                             first_reply[post.mediacount - 1].reply_text(
                                 long.caption, entities=long.entities, quote=True
                             )
 
                     elif post.typename in ("GraphImage", "GraphVideo"):
-                        pairs = Pairs(post)
-                        short = pairs.short()
+                        formatted_captions = FormattedCaptions(post)
+                        short = formatted_captions.short()
                         if post.typename == "GraphVideo":
                             first_reply = update.message.reply_video(
                                 video=post.video_url,
@@ -212,8 +212,8 @@ class InstagramHandler:
                                 caption=short.caption,
                                 caption_entities=short.entities,
                             )
-                        long = pairs.long()
-                        if len(long.caption) > 1024:
+                        long = formatted_captions.long()
+                        if len(long.caption) > MAX_CAPTION_LENGTH:
                             first_reply.reply_text(
                                 long.caption, entities=long.entities, quote=True
                             )
