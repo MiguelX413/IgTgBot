@@ -100,8 +100,6 @@ if __name__ == "__main__":
     do_rich = True
     if args.rich:
         try:
-            import rich
-            from rich.progress import track, Progress
             from rich.logging import RichHandler
         except ModuleNotFoundError:
             do_rich = False
@@ -124,6 +122,8 @@ if __name__ == "__main__":
 
     logging.info(str(args))
     logging.info(f"do_rich: {do_rich}")
+    if "TG_TOKEN" in os.environ:
+        logging.info(f"TG_TOKEN: {os.environ.get('TG_TOKEN')}")
 
     if args.whitelist is None:
         user_whitelist: Optional[Set[int]] = None
@@ -132,4 +132,8 @@ if __name__ == "__main__":
         user_whitelist: Optional[Set[int]] = set(args.whitelist)
         logging.info(f"Authorized users: {user_whitelist}")
 
-    main(args.token, args.ig_user, user_whitelist)
+    main(
+        os.environ.get("TG_TOKEN") if "TG_TOKEN" in os.environ else args.token,
+        args.ig_user,
+        user_whitelist,
+    )
