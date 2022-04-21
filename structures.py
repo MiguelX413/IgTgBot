@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from typing import NamedTuple, List, Dict, Set, Optional
 
-from instaloader import Post
+from instaloader import Post, InstaloaderContext
 from telegram import MessageEntity, User
 from telegram.constants import MAX_CAPTION_LENGTH
 
@@ -25,7 +25,7 @@ class TaggedUser(NamedTuple):
 
 class PatchedPost(Post):
     @property
-    def context(self):
+    def context(self) -> InstaloaderContext:
         return self._context
 
     @property
@@ -46,7 +46,7 @@ class PatchedPost(Post):
             return []
 
 
-# def parse_for_shortcodes(text: str) -> list:
+# def parse_for_shortcodes(text: str) -> List[str]:
 #    return
 
 
@@ -69,7 +69,7 @@ class FormattedCaption:
 
     def __init__(
         self, caption: str = "", entities: Optional[List[MessageEntity]] = None
-    ):
+    ) -> None:
         if entities is None:
             entities = []
         self.caption = caption
@@ -82,7 +82,7 @@ class FormattedCaption:
         url: Optional[str] = None,
         user: Optional[User] = None,
         language: Optional[str] = None,
-    ):
+    ) -> None:
         if type is not None:
             self.entities.append(
                 MessageEntity(
@@ -100,7 +100,7 @@ class FormattedCaption:
 class FormattedCaptions:
     _post: PatchedPost
 
-    def __init__(self, post: PatchedPost):
+    def __init__(self, post: PatchedPost) -> None:
         self._post = post
 
     def long(self, counter: Optional[int] = None) -> FormattedCaption:

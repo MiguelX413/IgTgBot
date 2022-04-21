@@ -24,7 +24,7 @@ class InstagramHandler:
     instaloader: Instaloader
     whitelist: Set[int]
 
-    def __init__(self, ig_user: Optional[str], whitelist: Optional[Set[int]]):
+    def __init__(self, ig_user: Optional[str], whitelist: Optional[Set[int]]) -> None:
         self.whitelist = whitelist
 
         L = Instaloader()
