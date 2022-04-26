@@ -27,7 +27,7 @@ class InstagramHandler:
     def __init__(self, ig_user: Optional[str], whitelist: Optional[Set[int]]) -> None:
         self.whitelist = whitelist
 
-        L = Instaloader()
+        instaloader = Instaloader()
         if ig_user is not None:
             ig_user: str = (
                 ig_user
@@ -35,11 +35,11 @@ class InstagramHandler:
                 else input("Please type your Instagram username: ")
             )
             try:
-                L.load_session_from_file(username=ig_user)
+                instaloader.load_session_from_file(username=ig_user)
             except FileNotFoundError:
-                L.interactive_login(ig_user)
-            L.save_session_to_file()
-        self.instaloader = L
+                instaloader.interactive_login(ig_user)
+            instaloader.save_session_to_file()
+        self.instaloader = instaloader
 
     def inlinequery(self, update: Update, context: CallbackContext) -> None:
         """Produces results for Inline Queries"""
