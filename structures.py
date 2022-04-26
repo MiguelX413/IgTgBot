@@ -78,7 +78,7 @@ class FormattedCaption:
     def append(
         self,
         text: str,
-        type: Optional[str] = None,
+        type: Optional[str] = None,  # pylint: disable=W0622
         url: Optional[str] = None,
         user: Optional[User] = None,
         language: Optional[str] = None,
