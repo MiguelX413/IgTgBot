@@ -120,7 +120,7 @@ if __name__ == "__main__":
         handlers=logging_handlers,
     )
 
-    logging.info(str(args))
+    logging.info(args)
     logging.info("do_rich: %s", do_rich)
     if "TG_TOKEN" in os.environ:
         logging.info("TG_TOKEN: %s", os.environ.get("TG_TOKEN"))
