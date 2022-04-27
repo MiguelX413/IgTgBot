@@ -26,7 +26,17 @@ class TaggedUser(NamedTuple):
 class PatchedPost(Post):
     @property
     def context(self) -> InstaloaderContext:
+        """Return the Instaloader context used for this post"""
         return self._context
+
+    @property
+    def owner_username(self) -> str:
+        """The Post's lowercase owner name."""
+        # Check if owner username data already available in post data
+        if "owner" in self._node and "username" in self._node["owner"]:
+            return self._node["owner"]["username"]
+        else:
+            return self.owner_profile.username
 
     @property
     def tagged_users(self) -> List[TaggedUser]:
@@ -44,6 +54,24 @@ class PatchedPost(Post):
             ]
         except KeyError:
             return []
+
+
+class PatchedStoryItem(StoryItem):
+    @property
+    def owner_username(self) -> str:
+        """The StoryItem owner's lowercase name."""
+        if "owner" in self._node and "username" in self._node["owner"]:
+            return self._node["owner"]["username"]
+        else:
+            return self.owner_profile.username
+
+    @property
+    def owner_id(self) -> int:
+        """The ID of the StoryItem owner."""
+        if "owner" in self._node and "id" in self._node["owner"]:
+            return self._node["owner"]["id"]
+        else:
+            return self.owner_profile.userid
 
 
 # def parse_for_shortcodes(text: str) -> List[str]:
@@ -299,9 +327,9 @@ class PostCaptions:
 
 
 class StoryItemCaptions:
-    _story_item: StoryItem
+    _story_item: PatchedStoryItem
 
-    def __init__(self, story_item: StoryItem) -> None:
+    def __init__(self, story_item: PatchedStoryItem) -> None:
         self._story_item = story_item
 
     def long(self) -> FormattedCaption:

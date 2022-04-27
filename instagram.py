@@ -3,7 +3,7 @@ import logging
 from typing import List, Union, Set, Optional
 from uuid import uuid4
 
-from instaloader import Instaloader, StoryItem
+from instaloader import Instaloader
 from telegram import (
     InlineQueryResultArticle,
     InlineQueryResultPhoto,
@@ -17,7 +17,7 @@ from telegram import (
 from telegram.constants import MAX_CAPTION_LENGTH
 from telegram.ext import CallbackContext
 
-from structures import PatchedPost, PostCaptions, StoryItemCaptions
+from structures import PatchedPost, PostCaptions, StoryItemCaptions, PatchedStoryItem
 
 
 class InstagramHandler:
@@ -230,7 +230,7 @@ class InstagramHandler:
             if len(context.args) >= 1:
                 media_id: int = int(context.args[0])
                 if ig_story_item:
-                    story_item: StoryItem = StoryItem.from_mediaid(
+                    story_item: PatchedStoryItem = PatchedStoryItem.from_mediaid(
                         self.instaloader.context, media_id
                     )
                     logging.info(str(story_item.__dict__))
