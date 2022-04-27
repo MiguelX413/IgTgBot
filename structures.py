@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from typing import NamedTuple, List, Dict, Set, Optional
 
-from instaloader import Post, InstaloaderContext
+from instaloader import Post, InstaloaderContext, StoryItem
 from telegram import MessageEntity, User
 from telegram.constants import MAX_CAPTION_LENGTH
 
@@ -97,7 +97,7 @@ class FormattedCaption:
         self.caption += text
 
 
-class FormattedCaptions:
+class PostCaptions:
     _post: PatchedPost
 
     def __init__(self, post: PatchedPost) -> None:
@@ -123,7 +123,7 @@ class FormattedCaptions:
         formatted_caption.append("Media", type="text_link", url=media_url)
         formatted_caption.append("\n")
 
-        # Posting account and Counter
+        # Posting account, post url, and counter
         formatted_caption.append(
             f"@{self._post.owner_username}",
             type="text_link",
@@ -250,6 +250,94 @@ class FormattedCaptions:
     def short(self, counter: Optional[int] = None) -> FormattedCaption:
         formatted_caption = FormattedCaption()
         long = self.long(counter)
+
+        if len(long.caption) > MAX_CAPTION_LENGTH:
+            formatted_caption.caption = f"{long.caption[0 : MAX_CAPTION_LENGTH - 1]}…"
+        else:
+            formatted_caption.caption = long.caption
+
+        for long_entity in list(long.entities):
+            if (
+                len(
+                    long.caption.encode("UTF-16-le")[
+                        0 : 2 * (long_entity.offset + long_entity.length)
+                    ].decode("UTF-16-le")
+                )
+                > MAX_CAPTION_LENGTH
+            ):
+                if (
+                    len(
+                        long.caption.encode("UTF-16-le")[
+                            0 : 2 * long_entity.offset
+                        ].decode("UTF-16-le")
+                    )
+                    < MAX_CAPTION_LENGTH
+                ):
+                    formatted_caption.entities.append(
+                        MessageEntity(
+                            type=long_entity.type,
+                            offset=long_entity.offset,
+                            length=utf16len(
+                                long.caption[: MAX_CAPTION_LENGTH - 1]
+                                .encode("UTF-16-le")[2 * long_entity.offset :]
+                                .decode("UTF-16-le")
+                            ),
+                            url=long_entity.url,
+                        )
+                    )
+            else:
+                formatted_caption.entities.append(
+                    MessageEntity(
+                        type=long_entity.type,
+                        offset=long_entity.offset,
+                        length=long_entity.length,
+                        url=long_entity.url,
+                    )
+                )
+
+        return formatted_caption
+
+
+class StoryItemCaptions:
+    _story_item: StoryItem
+
+    def __init__(self, story_item: StoryItem) -> None:
+        self._story_item = story_item
+
+    def long(self) -> FormattedCaption:
+        """Create a FormattedCaption object from a given post"""
+        # Initializing
+        formatted_caption = FormattedCaption()
+
+        # Media URL
+        if self._story_item.is_video:
+            media_url = self._story_item.video_url
+        else:
+            media_url = self._story_item.url
+        formatted_caption.append("Media", type="text_link", url=media_url)
+        formatted_caption.append("\n")
+
+        # Posting account and story item url
+        formatted_caption.append(
+            f"@{self._story_item.owner_username}",
+            type="text_link",
+            url=f"https://instagram.com/{self._story_item.owner_username}/",
+        )
+        formatted_caption.append(
+            f" ({self._story_item.owner_id}): https://instagram.com/stories/{self._story_item.owner_username}/{self._story_item.mediaid}/"
+        )
+        formatted_caption.append("\n")
+
+        # Date
+        formatted_caption.append(
+            f"{emojis['calendar']}{self._story_item.date_utc:%Y-%m-%d %H:%M:%S}\n"
+        )
+
+        return formatted_caption
+
+    def short(self) -> FormattedCaption:
+        formatted_caption = FormattedCaption()
+        long = self.long()
 
         if len(long.caption) > MAX_CAPTION_LENGTH:
             formatted_caption.caption = f"{long.caption[0 : MAX_CAPTION_LENGTH - 1]}…"

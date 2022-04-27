@@ -3,7 +3,7 @@ import logging
 from typing import List, Union, Set, Optional
 from uuid import uuid4
 
-from instaloader import Instaloader
+from instaloader import Instaloader, StoryItem
 from telegram import (
     InlineQueryResultArticle,
     InlineQueryResultPhoto,
@@ -17,7 +17,7 @@ from telegram import (
 from telegram.constants import MAX_CAPTION_LENGTH
 from telegram.ext import CallbackContext
 
-from structures import PatchedPost, FormattedCaptions
+from structures import PatchedPost, PostCaptions, StoryItemCaptions
 
 
 class InstagramHandler:
@@ -55,7 +55,7 @@ class InstagramHandler:
             logging.info(str(post.__dict__))
             if post.typename == "GraphSidecar":
                 counter: int = 0
-                formatted_captions = FormattedCaptions(post)
+                formatted_captions = PostCaptions(post)
                 for node in post.get_sidecar_nodes():
                     short = formatted_captions.short(counter)
                     if node.is_video is True:
@@ -96,7 +96,7 @@ class InstagramHandler:
                     counter += 1
 
             elif post.typename in ("GraphImage", "GraphVideo"):
-                formatted_captions = FormattedCaptions(post)
+                formatted_captions = PostCaptions(post)
                 short = formatted_captions.short()
                 if post.typename == "GraphVideo":
                     results.append(
@@ -159,7 +159,7 @@ class InstagramHandler:
                     logging.info(str(post.__dict__))
 
                     if post.typename == "GraphSidecar":
-                        formatted_captions = FormattedCaptions(post)
+                        formatted_captions = PostCaptions(post)
                         counter: int = 0
                         media_group: List[Union[InputMediaPhoto, InputMediaVideo]] = []
                         for node in post.get_sidecar_nodes():
@@ -195,7 +195,7 @@ class InstagramHandler:
                             )
 
                     elif post.typename in ("GraphImage", "GraphVideo"):
-                        formatted_captions = FormattedCaptions(post)
+                        formatted_captions = PostCaptions(post)
                         short = formatted_captions.short()
                         if post.typename == "GraphVideo":
                             first_reply = update.message.reply_video(
@@ -219,5 +219,45 @@ class InstagramHandler:
                             )
                 else:
                     update.message.reply_text("Not an Instagram post", quote=True)
+        else:
+            update.message.reply_text("Unauthorized user", quote=True)
+
+    def story_item(self, update: Update, context: CallbackContext) -> None:
+        """Returns story items"""
+        logging.info(str(update.message))
+        ig_story_item: bool = True
+        if (self.whitelist is None) or (update.message.from_user.id in self.whitelist):
+            if len(context.args) >= 1:
+                media_id: int = int(context.args[0])
+                if ig_story_item:
+                    story_item: StoryItem = StoryItem.from_mediaid(
+                        self.instaloader.context, media_id
+                    )
+                    logging.info(str(story_item.__dict__))
+
+                    formatted_captions = StoryItemCaptions(story_item)
+                    short = formatted_captions.short()
+                    if story_item.is_video:
+                        first_reply = update.message.reply_video(
+                            video=story_item.video_url,
+                            quote=True,
+                            caption=short.caption,
+                            caption_entities=short.entities,
+                        )
+
+                    else:
+                        first_reply = update.message.reply_photo(
+                            photo=story_item.url,
+                            quote=True,
+                            caption=short.caption,
+                            caption_entities=short.entities,
+                        )
+                    long = formatted_captions.long()
+                    if len(long.caption) > MAX_CAPTION_LENGTH:
+                        first_reply.reply_text(
+                            long.caption, entities=long.entities, quote=True
+                        )
+                else:
+                    update.message.reply_text("Not an Instagram story item", quote=True)
         else:
             update.message.reply_text("Unauthorized user", quote=True)
