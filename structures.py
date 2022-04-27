@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+import re
 from typing import NamedTuple, List, Dict, Set, Optional
+from unicodedata import normalize
 
 from instaloader import Post, InstaloaderContext, StoryItem
 from telegram import MessageEntity, User
@@ -14,6 +16,37 @@ emojis: Dict[str, str] = {
     "calendar": "📅",
 }
 
+hashtag_regex = re.compile(r"(?:#)(\w(?:(?:\w|(?:\.(?!\.))){0,28}(?:\w))?)")
+mention_regex = re.compile(
+    r"(?:^|\W|_)(?:@)(\w(?:(?:\w|(?:\.(?!\.))){0,28}(?:\w))?)", re.ASCII
+)
+
+# def parse_for_shortcodes(text: str) -> List[str]:
+#    return
+
+
+def utf16len(string: str) -> int:
+    """Returns the UTF-16 length of a string."""
+    return len(string.encode("UTF-16-le")) // 2
+
+
+def find_occurrences(string: str, substring: str) -> Set[int]:
+    """Returns the multiple occurrences of a substring in a string"""
+    offsets: Set[int] = set()
+    pos: int = string.find(substring)
+    while pos != -1:
+        offsets.add(pos)
+        pos = string.find(substring, pos + 1)
+    return offsets
+
+
+def conditional_normalize(string: Optional[str]) -> Optional[str]:
+    """Return a normalized string or None if input is None"""
+    if string is not None:
+        return normalize("NFC", string)
+    else:
+        return None
+
 
 class TaggedUser(NamedTuple):
     full_name: str
@@ -24,6 +57,34 @@ class TaggedUser(NamedTuple):
 
 
 class PatchedPost(Post):
+    @property
+    def caption(self) -> Optional[str]:
+        """Caption."""
+        if (
+            "edge_media_to_caption" in self._node
+            and self._node["edge_media_to_caption"]["edges"]
+        ):
+            return conditional_normalize(
+                self._node["edge_media_to_caption"]["edges"][0]["node"]["text"]
+            )
+        elif "caption" in self._node:
+            return conditional_normalize(self._node["caption"])
+        return None
+
+    @property
+    def caption_hashtags(self) -> List[str]:
+        """List of all lowercased hashtags (without preceeding #) that occur in the Post's caption."""
+        if not self.caption:
+            return []
+        return re.findall(hashtag_regex, self.caption.lower())
+
+    @property
+    def caption_mentions(self) -> List[str]:
+        """List of all lowercased profiles that are mentioned in the Post's caption, without preceeding @."""
+        if not self.caption:
+            return []
+        return re.findall(mention_regex, self.caption.lower())
+
     @property
     def context(self) -> InstaloaderContext:
         """Return the Instaloader context used for this post"""
@@ -73,24 +134,33 @@ class PatchedStoryItem(StoryItem):
         else:
             return self.owner_profile.userid
 
+    @property
+    def caption(self) -> Optional[str]:
+        """Caption."""
+        if (
+            "edge_media_to_caption" in self._node
+            and self._node["edge_media_to_caption"]["edges"]
+        ):
+            return conditional_normalize(
+                self._node["edge_media_to_caption"]["edges"][0]["node"]["text"]
+            )
+        elif "caption" in self._node:
+            return conditional_normalize(self._node["caption"])
+        return None
 
-# def parse_for_shortcodes(text: str) -> List[str]:
-#    return
+    @property
+    def caption_hashtags(self) -> List[str]:
+        """List of all lowercased hashtags (without preceeding #) that occur in the Post's caption."""
+        if not self.caption:
+            return []
+        return re.findall(hashtag_regex, self.caption.lower())
 
-
-def utf16len(string: str) -> int:
-    """Returns the UTF-16 length of a string."""
-    return len(string.encode("UTF-16-le")) // 2
-
-
-def find_occurrences(string: str, substring: str) -> Set[int]:
-    """Returns the multiple occurrences of a substring in a string"""
-    offsets: Set[int] = set()
-    pos: int = string.find(substring)
-    while pos != -1:
-        offsets.add(pos)
-        pos = string.find(substring, pos + 1)
-    return offsets
+    @property
+    def caption_mentions(self) -> List[str]:
+        """List of all lowercased profiles that are mentioned in the Post's caption, without preceeding @."""
+        if not self.caption:
+            return []
+        return re.findall(mention_regex, self.caption.lower())
 
 
 class FormattedCaption:
@@ -362,6 +432,58 @@ class StoryItemCaptions:
         formatted_caption.append(
             f"{emojis['calendar']}{self._story_item.date_utc:%Y-%m-%d %H:%M:%S}\n"
         )
+
+        # Story item Caption
+        if self._story_item.caption is not None:
+            old_caption = formatted_caption.caption
+            formatted_caption.append(self._story_item.caption)
+
+            # Mentions + Hashtags
+            search_caption = (
+                f"{old_caption.replace('@', ',')}{self._story_item.caption}".lower()
+            )
+
+            # Mentions in caption
+            mention_occurrences: Set[int] = set()
+            for caption_mention in sorted(
+                set(self._story_item.caption_mentions), key=len, reverse=True
+            ):
+                for mention_occurrence in find_occurrences(
+                    search_caption, f"@{caption_mention}"
+                ):
+                    if mention_occurrence not in mention_occurrences:
+                        formatted_caption.entities.append(
+                            MessageEntity(
+                                type="text_link",
+                                offset=utf16len(
+                                    formatted_caption.caption[0:mention_occurrence]
+                                ),
+                                length=utf16len(f"@{caption_mention}"),
+                                url=f"https://instagram.com/{caption_mention}/",
+                            )
+                        )
+                    mention_occurrences.add(mention_occurrence)
+
+            # Hashtags in caption
+            hashtag_occurrences: Set[int] = set()
+            for caption_hashtag in sorted(
+                set(self._story_item.caption_hashtags), key=len, reverse=True
+            ):
+                for hashtag_occurrence in find_occurrences(
+                    search_caption, f"#{caption_hashtag}"
+                ):
+                    if hashtag_occurrence not in hashtag_occurrences:
+                        formatted_caption.entities.append(
+                            MessageEntity(
+                                type="text_link",
+                                offset=utf16len(
+                                    formatted_caption.caption[0:hashtag_occurrence]
+                                ),
+                                length=utf16len(f"#{caption_hashtag}"),
+                                url=f"https://instagram.com/explore/tags/{caption_hashtag}/",
+                            )
+                        )
+                    hashtag_occurrences.add(hashtag_occurrence)
 
         return formatted_caption
 
