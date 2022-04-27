@@ -98,14 +98,12 @@ class FormattedCaption:
     entities: List[MessageEntity] = []
 
     def __init__(
-        self,
-        caption: Optional[str] = None,
-        entities: Optional[List[MessageEntity]] = None,
+        self, caption: str = "", entities: Optional[List[MessageEntity]] = None
     ) -> None:
-        if caption is not None:
-            self.caption = caption
-        if entities is not None:
-            self.entities = entities
+        if entities is None:
+            entities = []
+        self.caption = caption
+        self.entities = entities
 
     def append(
         self,
