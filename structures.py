@@ -79,10 +79,12 @@ class PatchedStoryItem(StoryItem):
 
 
 def utf16len(string: str) -> int:
+    """Returns the UTF-16 length of a string."""
     return len(string.encode("UTF-16-le")) // 2
 
 
 def find_occurrences(string: str, substring: str) -> Set[int]:
+    """Returns the multiple occurrences of a substring in a string"""
     offsets: Set[int] = set()
     pos: int = string.find(substring)
     while pos != -1:
