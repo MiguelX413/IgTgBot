@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-from typing import NamedTuple, List, Dict, Set, Optional
+from typing import NamedTuple
 
 from instaloader import Post, InstaloaderContext
 from telegram import MessageEntity, User
 from telegram.constants import MAX_CAPTION_LENGTH
 
-emojis: Dict[str, str] = {
+emojis: dict[str, str] = {
     "person": "👤",
     "location": "📍",
     "eyes": "👀",
@@ -29,7 +29,7 @@ class PatchedPost(Post):
         return self._context
 
     @property
-    def tagged_users(self) -> List[TaggedUser]:
+    def tagged_users(self) -> list[TaggedUser]:
         """List of all users that are tagged in the Post."""
         try:
             return [
@@ -54,8 +54,8 @@ def utf16len(string: str) -> int:
     return len(string.encode("UTF-16-le")) // 2
 
 
-def find_occurrences(string: str, substring: str) -> Set[int]:
-    offsets: Set[int] = set()
+def find_occurrences(string: str, substring: str) -> set[int]:
+    offsets: set[int] = set()
     pos: int = string.find(substring)
     while pos != -1:
         offsets.add(pos)
@@ -65,10 +65,10 @@ def find_occurrences(string: str, substring: str) -> Set[int]:
 
 class FormattedCaption:
     caption: str = ""
-    entities: List[MessageEntity] = []
+    entities: list[MessageEntity] = []
 
     def __init__(
-        self, caption: str = "", entities: Optional[List[MessageEntity]] = None
+        self, caption: str = "", entities: list[MessageEntity] | None = None
     ) -> None:
         if entities is None:
             entities = []
@@ -78,10 +78,10 @@ class FormattedCaption:
     def append(
         self,
         text: str,
-        type: Optional[str] = None,  # pylint: disable=W0622
-        url: Optional[str] = None,
-        user: Optional[User] = None,
-        language: Optional[str] = None,
+        type: str | None = None,  # pylint: disable=W0622
+        url: str | None = None,
+        user: User | None = None,
+        language: str | None = None,
     ) -> None:
         if type is not None:
             self.entities.append(
@@ -103,7 +103,7 @@ class FormattedCaptions:
     def __init__(self, post: PatchedPost) -> None:
         self._post = post
 
-    def long(self, counter: Optional[int] = None) -> FormattedCaption:
+    def long(self, counter: int | None = None) -> FormattedCaption:
         """Create a FormattedCaption object from a given post"""
         # Initializing
         formatted_caption = FormattedCaption()
@@ -204,7 +204,7 @@ class FormattedCaptions:
             )
 
             # Mentions in caption
-            mention_occurrences: Set[int] = set()
+            mention_occurrences: set[int] = set()
             for caption_mention in sorted(
                 set(self._post.caption_mentions), key=len, reverse=True
             ):
@@ -225,7 +225,7 @@ class FormattedCaptions:
                     mention_occurrences.add(mention_occurrence)
 
             # Hashtags in caption
-            hashtag_occurrences: Set[int] = set()
+            hashtag_occurrences: set[int] = set()
             for caption_hashtag in sorted(
                 set(self._post.caption_hashtags), key=len, reverse=True
             ):
@@ -247,7 +247,7 @@ class FormattedCaptions:
 
         return formatted_caption
 
-    def short(self, counter: Optional[int] = None) -> FormattedCaption:
+    def short(self, counter: int | None = None) -> FormattedCaption:
         formatted_caption = FormattedCaption()
         long = self.long(counter)
 

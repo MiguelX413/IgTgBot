@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import logging
-from typing import List, Union, Set, Optional
 from uuid import uuid4
 
 from instaloader import Instaloader
@@ -22,9 +21,9 @@ from structures import PatchedPost, FormattedCaptions
 
 class InstagramHandler:
     instaloader: Instaloader
-    whitelist: Set[int]
+    whitelist: set[int]
 
-    def __init__(self, ig_user: Optional[str], whitelist: Optional[Set[int]]) -> None:
+    def __init__(self, ig_user: str | None, whitelist: set[int] | None) -> None:
         self.whitelist = whitelist
 
         instaloader = Instaloader()
@@ -47,7 +46,7 @@ class InstagramHandler:
         if (self.whitelist is None) or (
             update.inline_query.from_user.id in self.whitelist
         ):
-            results: List[InlineQueryResult] = []
+            results: list[InlineQueryResult] = []
             shortcode: str = update.inline_query.query
             post: PatchedPost = PatchedPost.from_shortcode(
                 self.instaloader.context, shortcode
@@ -161,7 +160,7 @@ class InstagramHandler:
                     if post.typename == "GraphSidecar":
                         formatted_captions = FormattedCaptions(post)
                         counter: int = 0
-                        media_group: List[Union[InputMediaPhoto, InputMediaVideo]] = []
+                        media_group: list[InputMediaPhoto | InputMediaVideo] = []
                         for node in post.get_sidecar_nodes():
                             short = formatted_captions.short(counter)
                             if node.is_video is True:

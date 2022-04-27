@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import logging
 import os
-from typing import Set, Optional
 
 from telegram import Update
 from telegram.ext import (
@@ -19,7 +18,7 @@ def start(update: Update, _: CallbackContext) -> None:
     update.message.reply_text("Hi, lmao", quote=True)
 
 
-def main(token: str, ig_user: str, whitelist: Set[int]) -> None:
+def main(token: str, ig_user: str, whitelist: set[int]) -> None:
     updater = Updater(token, use_context=True)
     dispatcher: Dispatcher = updater.dispatcher
 
@@ -126,10 +125,10 @@ if __name__ == "__main__":
         logging.info("TG_TOKEN: %s", os.environ.get("TG_TOKEN"))
 
     if args.whitelist is None:
-        user_whitelist: Optional[Set[int]] = None
+        user_whitelist: set[int] | None = None
         logging.info("No authorized users specified")
     else:
-        user_whitelist: Optional[Set[int]] = set(args.whitelist)
+        user_whitelist: set[int] | None = set(args.whitelist)
         logging.info("Authorized users: %s", user_whitelist)
 
     main(
