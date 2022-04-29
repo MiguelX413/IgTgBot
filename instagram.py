@@ -297,3 +297,34 @@ class InstagramHandler:
                     update.message.reply_text("Not an Instagram profile", quote=True)
         else:
             update.message.reply_text("Unauthorized user", quote=True)
+
+    def profileid(self, update: Update, context: CallbackContext) -> None:
+        """Returns Instagram profiles"""
+        logging.info(str(update.message))
+        is_ig_profile: bool = True
+        if (self.whitelist is None) or (update.message.from_user.id in self.whitelist):
+            if len(context.args) >= 1:
+                profile_id: int = int(context.args[0])
+                if is_ig_profile:
+                    profile: PatchedProfile = PatchedProfile.from_id(
+                        self.instaloader.context, profile_id
+                    )
+                    logging.info(str(profile.__dict__))
+
+                    profile_captions = ProfileCaptions(profile)
+                    short = profile_captions.short_caption()
+                    first_reply = update.message.reply_photo(
+                        photo=profile.profile_pic_url,
+                        quote=True,
+                        caption=short.caption,
+                        caption_entities=short.entities,
+                    )
+                    long = profile_captions.long_caption()
+                    if len(long.caption) > MAX_CAPTION_LENGTH:
+                        first_reply.reply_text(
+                            long.caption, entities=long.entities, quote=True
+                        )
+                else:
+                    update.message.reply_text("Not an Instagram profile", quote=True)
+        else:
+            update.message.reply_text("Unauthorized user", quote=True)
