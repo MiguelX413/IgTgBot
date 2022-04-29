@@ -197,6 +197,60 @@ class FormattedCaption:
         self.caption += text
 
 
+def shorten_formatted_caption(
+    formatted_caption: FormattedCaption, length: int = MAX_CAPTION_LENGTH
+) -> FormattedCaption:
+    output_formatted_caption = FormattedCaption()
+
+    if len(formatted_caption.caption) > length:
+        output_formatted_caption.caption = (
+            f"{formatted_caption.caption[0 : length - 1]}…"
+        )
+    else:
+        output_formatted_caption.caption = formatted_caption.caption
+
+    for long_entity in list(formatted_caption.entities):
+        if (
+            len(
+                formatted_caption.caption.encode("UTF-16-le")[
+                    0 : 2 * (long_entity.offset + long_entity.length)
+                ].decode("UTF-16-le")
+            )
+            > length
+        ):
+            if (
+                len(
+                    formatted_caption.caption.encode("UTF-16-le")[
+                        0 : 2 * long_entity.offset
+                    ].decode("UTF-16-le")
+                )
+                < length
+            ):
+                output_formatted_caption.entities.append(
+                    MessageEntity(
+                        type=long_entity.type,
+                        offset=long_entity.offset,
+                        length=utf16len(
+                            formatted_caption.caption[: length - 1]
+                            .encode("UTF-16-le")[2 * long_entity.offset :]
+                            .decode("UTF-16-le")
+                        ),
+                        url=long_entity.url,
+                    )
+                )
+        else:
+            output_formatted_caption.entities.append(
+                MessageEntity(
+                    type=long_entity.type,
+                    offset=long_entity.offset,
+                    length=long_entity.length,
+                    url=long_entity.url,
+                )
+            )
+
+    return output_formatted_caption
+
+
 class PostCaptions:
     _post: PatchedPost
 
@@ -348,54 +402,7 @@ class PostCaptions:
         return formatted_caption
 
     def short(self, counter: Optional[int] = None) -> FormattedCaption:
-        formatted_caption = FormattedCaption()
-        long = self.long(counter)
-
-        if len(long.caption) > MAX_CAPTION_LENGTH:
-            formatted_caption.caption = f"{long.caption[0 : MAX_CAPTION_LENGTH - 1]}…"
-        else:
-            formatted_caption.caption = long.caption
-
-        for long_entity in list(long.entities):
-            if (
-                len(
-                    long.caption.encode("UTF-16-le")[
-                        0 : 2 * (long_entity.offset + long_entity.length)
-                    ].decode("UTF-16-le")
-                )
-                > MAX_CAPTION_LENGTH
-            ):
-                if (
-                    len(
-                        long.caption.encode("UTF-16-le")[
-                            0 : 2 * long_entity.offset
-                        ].decode("UTF-16-le")
-                    )
-                    < MAX_CAPTION_LENGTH
-                ):
-                    formatted_caption.entities.append(
-                        MessageEntity(
-                            type=long_entity.type,
-                            offset=long_entity.offset,
-                            length=utf16len(
-                                long.caption[: MAX_CAPTION_LENGTH - 1]
-                                .encode("UTF-16-le")[2 * long_entity.offset :]
-                                .decode("UTF-16-le")
-                            ),
-                            url=long_entity.url,
-                        )
-                    )
-            else:
-                formatted_caption.entities.append(
-                    MessageEntity(
-                        type=long_entity.type,
-                        offset=long_entity.offset,
-                        length=long_entity.length,
-                        url=long_entity.url,
-                    )
-                )
-
-        return formatted_caption
+        return shorten_formatted_caption(self.long(counter))
 
 
 class StoryItemCaptions:
@@ -488,51 +495,4 @@ class StoryItemCaptions:
         return formatted_caption
 
     def short(self) -> FormattedCaption:
-        formatted_caption = FormattedCaption()
-        long = self.long()
-
-        if len(long.caption) > MAX_CAPTION_LENGTH:
-            formatted_caption.caption = f"{long.caption[0 : MAX_CAPTION_LENGTH - 1]}…"
-        else:
-            formatted_caption.caption = long.caption
-
-        for long_entity in list(long.entities):
-            if (
-                len(
-                    long.caption.encode("UTF-16-le")[
-                        0 : 2 * (long_entity.offset + long_entity.length)
-                    ].decode("UTF-16-le")
-                )
-                > MAX_CAPTION_LENGTH
-            ):
-                if (
-                    len(
-                        long.caption.encode("UTF-16-le")[
-                            0 : 2 * long_entity.offset
-                        ].decode("UTF-16-le")
-                    )
-                    < MAX_CAPTION_LENGTH
-                ):
-                    formatted_caption.entities.append(
-                        MessageEntity(
-                            type=long_entity.type,
-                            offset=long_entity.offset,
-                            length=utf16len(
-                                long.caption[: MAX_CAPTION_LENGTH - 1]
-                                .encode("UTF-16-le")[2 * long_entity.offset :]
-                                .decode("UTF-16-le")
-                            ),
-                            url=long_entity.url,
-                        )
-                    )
-            else:
-                formatted_caption.entities.append(
-                    MessageEntity(
-                        type=long_entity.type,
-                        offset=long_entity.offset,
-                        length=long_entity.length,
-                        url=long_entity.url,
-                    )
-                )
-
-        return formatted_caption
+        return shorten_formatted_caption(self.long())
