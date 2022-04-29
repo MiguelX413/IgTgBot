@@ -17,7 +17,14 @@ from telegram import (
 from telegram.constants import MAX_CAPTION_LENGTH
 from telegram.ext import CallbackContext
 
-from structures import PatchedPost, PostCaptions, StoryItemCaptions, PatchedStoryItem
+from structures import (
+    PatchedPost,
+    PostCaptions,
+    StoryItemCaptions,
+    PatchedStoryItem,
+    PatchedProfile,
+    ProfileCaptions,
+)
 
 
 class InstagramHandler:
@@ -257,5 +264,36 @@ class InstagramHandler:
                         )
                 else:
                     update.message.reply_text("Not an Instagram story item", quote=True)
+        else:
+            update.message.reply_text("Unauthorized user", quote=True)
+
+    def profile(self, update: Update, context: CallbackContext) -> None:
+        """Returns Instagram profiles"""
+        logging.info(str(update.message))
+        is_ig_profile: bool = True
+        if (self.whitelist is None) or (update.message.from_user.id in self.whitelist):
+            if len(context.args) >= 1:
+                profile_username: str = context.args[0]
+                if is_ig_profile:
+                    profile: PatchedProfile = PatchedProfile.from_username(
+                        self.instaloader.context, profile_username
+                    )
+                    logging.info(str(profile.__dict__))
+
+                    profile_captions = ProfileCaptions(profile)
+                    short = profile_captions.short_caption()
+                    first_reply = update.message.reply_photo(
+                        photo=profile.profile_pic_url,
+                        quote=True,
+                        caption=short.caption,
+                        caption_entities=short.entities,
+                    )
+                    long = profile_captions.long_caption()
+                    if len(long.caption) > MAX_CAPTION_LENGTH:
+                        first_reply.reply_text(
+                            long.caption, entities=long.entities, quote=True
+                        )
+                else:
+                    update.message.reply_text("Not an Instagram profile", quote=True)
         else:
             update.message.reply_text("Unauthorized user", quote=True)

@@ -3,7 +3,7 @@ import re
 from typing import NamedTuple, List, Dict, Set, Optional
 from unicodedata import normalize
 
-from instaloader import Post, InstaloaderContext, StoryItem
+from instaloader import Post, InstaloaderContext, StoryItem, Profile
 from telegram import MessageEntity, User
 from telegram.constants import MAX_CAPTION_LENGTH
 
@@ -161,6 +161,26 @@ class PatchedStoryItem(StoryItem):
         if not self.caption:
             return []
         return re.findall(mention_regex, self.caption.lower())
+
+
+class PatchedProfile(Profile):
+    @property
+    def biography(self) -> str:
+        return conditional_normalize(self._metadata("biography"))
+
+    @property
+    def biography_hashtags(self) -> List[str]:
+        """List of all lowercased hashtags (without preceeding #) that occur in the Profile's biography."""
+        if not self.biography:
+            return []
+        return re.findall(hashtag_regex, self.biography.lower())
+
+    @property
+    def biography_mentions(self) -> List[str]:
+        """List of all lowercased profiles that are mentioned in the Profile's biography, without preceeding @."""
+        if not self.biography:
+            return []
+        return re.findall(mention_regex, self.biography.lower())
 
 
 class FormattedCaption:
@@ -495,6 +515,142 @@ class StoryItemCaptions:
                             )
                         )
                     hashtag_occurrences.add(hashtag_occurrence)
+
+        return formatted_caption
+
+    def short_caption(self) -> FormattedCaption:
+        return shorten_formatted_caption(self.long_caption())
+
+
+class ProfileCaptions:
+    _profile: PatchedProfile
+
+    def __init__(self, profile: PatchedProfile) -> None:
+        self._profile = profile
+
+    def long_caption(self) -> FormattedCaption:
+        """Create a FormattedCaption object from a given profile"""
+        # Initializing
+        formatted_caption = FormattedCaption()
+
+        # URL to profile picture
+        formatted_caption.append(
+            "Profile Picture", type="text_link", url=self._profile.profile_pic_url
+        )
+        formatted_caption.append("\n")
+
+        # Profile username and ID
+        formatted_caption.append(
+            f"@{self._profile.username}",
+            type="text_link",
+            url=f"https://instagram.com/{self._profile.username}/",
+        )
+        formatted_caption.append(f" ({self._profile.userid})\n")
+
+        # Post count
+        formatted_caption.append(f"{self._profile.mediacount} post")
+        if self._profile.mediacount > 1:
+            formatted_caption.append("s")
+        formatted_caption.append(", ")
+        # Follower count
+        formatted_caption.append(
+            f"{self._profile.followers}",
+            type="text_link",
+            url=f"https://instagram.com/{self._profile.username}/followers/",
+        )
+        formatted_caption.append(" follower")
+        if self._profile.followers > 1:
+            formatted_caption.append("s")
+        formatted_caption.append(", ")
+        # Following count
+        formatted_caption.append(
+            f"{self._profile.followees}",
+            type="text_link",
+            url=f"https://instagram.com/{self._profile.username}/following/",
+        )
+        formatted_caption.append(" following\n")
+
+        # IGTV count
+        if self._profile.igtvcount > 0:
+            formatted_caption.append(
+                f"{self._profile.igtvcount}",
+                type="text_link",
+                url=f"https://instagram.com/{self._profile.username}/channel/",
+            )
+            formatted_caption.append(f" IGTV post")
+            if self._profile.igtvcount > 1:
+                formatted_caption.append("s")
+            formatted_caption.append("\n")
+
+        # Full name
+        formatted_caption.append(f"{self._profile.full_name}", "bold")
+        formatted_caption.append("\n")
+
+        # Business account
+        if self._profile.is_business_account:
+            formatted_caption.append(
+                f"{self._profile.business_category_name}", type="italic"
+            )
+            formatted_caption.append("\n")
+
+        # Profile biography
+        if self._profile.biography is not None:
+            old_caption = formatted_caption.caption
+            formatted_caption.append(self._profile.biography)
+
+            # Mentions + Hashtags
+            search_caption = (
+                f"{old_caption.replace('@', ',')}{self._profile.biography}".lower()
+            )
+
+            # Mentions in biography
+            mention_occurrences: Set[int] = set()
+            for caption_mention in sorted(
+                set(self._profile.biography_mentions), key=len, reverse=True
+            ):
+                for mention_occurrence in find_occurrences(
+                    search_caption, f"@{caption_mention}"
+                ):
+                    if mention_occurrence not in mention_occurrences:
+                        formatted_caption.entities.append(
+                            MessageEntity(
+                                type="text_link",
+                                offset=utf16len(
+                                    formatted_caption.caption[0:mention_occurrence]
+                                ),
+                                length=utf16len(f"@{caption_mention}"),
+                                url=f"https://instagram.com/{caption_mention}/",
+                            )
+                        )
+                    mention_occurrences.add(mention_occurrence)
+
+            # Hashtags in biography
+            hashtag_occurrences: Set[int] = set()
+            for caption_hashtag in sorted(
+                set(self._profile.biography_hashtags), key=len, reverse=True
+            ):
+                for hashtag_occurrence in find_occurrences(
+                    search_caption, f"#{caption_hashtag}"
+                ):
+                    if hashtag_occurrence not in hashtag_occurrences:
+                        formatted_caption.entities.append(
+                            MessageEntity(
+                                type="text_link",
+                                offset=utf16len(
+                                    formatted_caption.caption[0:hashtag_occurrence]
+                                ),
+                                length=utf16len(f"#{caption_hashtag}"),
+                                url=f"https://instagram.com/explore/tags/{caption_hashtag}/",
+                            )
+                        )
+                    hashtag_occurrences.add(hashtag_occurrence)
+
+        # External URL
+        if self._profile.external_url is not None:
+            if self._profile.biography is not None:
+                formatted_caption.append("\n")
+            formatted_caption.append(f"{self._profile.external_url}", "bold")
+            formatted_caption.append("\n")
 
         return formatted_caption
 
