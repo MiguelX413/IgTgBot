@@ -45,7 +45,7 @@ def find_occurrences(string: str, substring: str) -> Set[int]:
     return offsets
 
 
-def conditional_normalize(string: Optional[str]) -> Optional[str]:
+def optional_normalize(string: Optional[str]) -> Optional[str]:
     """Return a normalized string or None if input is None"""
     if string is not None:
         return normalize("NFC", string)
@@ -69,11 +69,11 @@ class PatchedPost(Post):
             "edge_media_to_caption" in self._node
             and self._node["edge_media_to_caption"]["edges"]
         ):
-            return conditional_normalize(
+            return optional_normalize(
                 self._node["edge_media_to_caption"]["edges"][0]["node"]["text"]
             )
         elif "caption" in self._node:
-            return conditional_normalize(self._node["caption"])
+            return optional_normalize(self._node["caption"])
         return None
 
     @property
@@ -146,11 +146,11 @@ class PatchedStoryItem(StoryItem):
             "edge_media_to_caption" in self._node
             and self._node["edge_media_to_caption"]["edges"]
         ):
-            return conditional_normalize(
+            return optional_normalize(
                 self._node["edge_media_to_caption"]["edges"][0]["node"]["text"]
             )
         elif "caption" in self._node:
-            return conditional_normalize(self._node["caption"])
+            return optional_normalize(self._node["caption"])
         return None
 
     @property
@@ -171,7 +171,7 @@ class PatchedStoryItem(StoryItem):
 class PatchedProfile(Profile):
     @property
     def biography(self) -> str:
-        return conditional_normalize(self._metadata("biography"))
+        return optional_normalize(self._metadata("biography"))
 
     @property
     def biography_hashtags(self) -> List[str]:
