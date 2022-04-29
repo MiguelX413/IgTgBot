@@ -257,7 +257,7 @@ class PostCaptions:
     def __init__(self, post: PatchedPost) -> None:
         self._post = post
 
-    def long(self, counter: Optional[int] = None) -> FormattedCaption:
+    def long_caption(self, counter: Optional[int] = None) -> FormattedCaption:
         """Create a FormattedCaption object from a given post"""
         # Initializing
         formatted_caption = FormattedCaption()
@@ -401,8 +401,8 @@ class PostCaptions:
 
         return formatted_caption
 
-    def short(self, counter: Optional[int] = None) -> FormattedCaption:
-        return shorten_formatted_caption(self.long(counter))
+    def short_caption(self, counter: Optional[int] = None) -> FormattedCaption:
+        return shorten_formatted_caption(self.long_caption(counter))
 
 
 class StoryItemCaptions:
@@ -411,7 +411,7 @@ class StoryItemCaptions:
     def __init__(self, story_item: PatchedStoryItem) -> None:
         self._story_item = story_item
 
-    def long(self) -> FormattedCaption:
+    def long_caption(self) -> FormattedCaption:
         """Create a FormattedCaption object from a given post"""
         # Initializing
         formatted_caption = FormattedCaption()
@@ -494,5 +494,5 @@ class StoryItemCaptions:
 
         return formatted_caption
 
-    def short(self) -> FormattedCaption:
-        return shorten_formatted_caption(self.long())
+    def short_caption(self) -> FormattedCaption:
+        return shorten_formatted_caption(self.long_caption())
