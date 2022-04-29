@@ -584,7 +584,7 @@ class ProfileCaptions:
                 type=MESSAGEENTITY_TEXT_LINK,
                 url=f"https://instagram.com/{self._profile.username}/channel/",
             )
-            formatted_caption.append(f" IGTV post")
+            formatted_caption.append(" IGTV post")
             if self._profile.igtvcount > 1:
                 formatted_caption.append("s")
             formatted_caption.append("\n")
