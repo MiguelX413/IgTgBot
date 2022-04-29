@@ -29,11 +29,6 @@ class InstagramHandler:
 
         instaloader = Instaloader()
         if ig_user is not None:
-            ig_user: str = (
-                ig_user
-                if ig_user is not None
-                else input("Please type your Instagram username: ")
-            )
             try:
                 instaloader.load_session_from_file(username=ig_user)
             except FileNotFoundError:
