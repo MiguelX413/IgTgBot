@@ -55,9 +55,9 @@ class InstagramHandler:
             logging.info(str(post.__dict__))
             if post.typename == "GraphSidecar":
                 counter: int = 0
-                formatted_captions = PostCaptions(post)
+                post_captions = PostCaptions(post)
                 for node in post.get_sidecar_nodes():
-                    short = formatted_captions.short_caption(counter)
+                    short = post_captions.short_caption(counter)
                     if node.is_video is True:
                         results.append(
                             InlineQueryResultVideo(
@@ -96,8 +96,8 @@ class InstagramHandler:
                     counter += 1
 
             elif post.typename in ("GraphImage", "GraphVideo"):
-                formatted_captions = PostCaptions(post)
-                short = formatted_captions.short_caption()
+                post_captions = PostCaptions(post)
+                short = post_captions.short_caption()
                 if post.typename == "GraphVideo":
                     results.append(
                         InlineQueryResultVideo(
@@ -159,11 +159,11 @@ class InstagramHandler:
                     logging.info(str(post.__dict__))
 
                     if post.typename == "GraphSidecar":
-                        formatted_captions = PostCaptions(post)
+                        post_captions = PostCaptions(post)
                         counter: int = 0
                         media_group: List[Union[InputMediaPhoto, InputMediaVideo]] = []
                         for node in post.get_sidecar_nodes():
-                            short = formatted_captions.short_caption(counter)
+                            short = post_captions.short_caption(counter)
                             if node.is_video is True:
                                 media_group.append(
                                     InputMediaVideo(
@@ -189,17 +189,17 @@ class InstagramHandler:
                         )
 
                         if (
-                            len(formatted_captions.long_caption(0).caption)
+                            len(post_captions.long_caption(0).caption)
                             > MAX_CAPTION_LENGTH
                         ):
-                            long = formatted_captions.long_caption()
+                            long = post_captions.long_caption()
                             first_reply[post.mediacount - 1].reply_text(
                                 long.caption, entities=long.entities, quote=True
                             )
 
                     elif post.typename in ("GraphImage", "GraphVideo"):
-                        formatted_captions = PostCaptions(post)
-                        short = formatted_captions.short_caption()
+                        post_captions = PostCaptions(post)
+                        short = post_captions.short_caption()
                         if post.typename == "GraphVideo":
                             first_reply = update.message.reply_video(
                                 video=post.video_url,
@@ -215,7 +215,7 @@ class InstagramHandler:
                                 caption=short.caption,
                                 caption_entities=short.entities,
                             )
-                        long = formatted_captions.long_caption()
+                        long = post_captions.long_caption()
                         if len(long.caption) > MAX_CAPTION_LENGTH:
                             first_reply.reply_text(
                                 long.caption, entities=long.entities, quote=True
@@ -238,8 +238,8 @@ class InstagramHandler:
                     )
                     logging.info(str(story_item.__dict__))
 
-                    formatted_captions = StoryItemCaptions(story_item)
-                    short = formatted_captions.short_caption()
+                    story_item_captions = StoryItemCaptions(story_item)
+                    short = story_item_captions.short_caption()
                     if story_item.is_video:
                         first_reply = update.message.reply_video(
                             video=story_item.video_url,
@@ -255,7 +255,7 @@ class InstagramHandler:
                             caption=short.caption,
                             caption_entities=short.entities,
                         )
-                    long = formatted_captions.long_caption()
+                    long = story_item_captions.long_caption()
                     if len(long.caption) > MAX_CAPTION_LENGTH:
                         first_reply.reply_text(
                             long.caption, entities=long.entities, quote=True
