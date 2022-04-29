@@ -148,11 +148,11 @@ class InstagramHandler:
     def posts(self, update: Update, context: CallbackContext) -> None:
         """Returns posts"""
         logging.info(str(update.message))
-        ig_post: bool = True
+        is_ig_post: bool = True
         if (self.whitelist is None) or (update.message.from_user.id in self.whitelist):
             if len(context.args) >= 1:
                 shortcode: str = context.args[0]
-                if ig_post:
+                if is_ig_post:
                     post: PatchedPost = PatchedPost.from_shortcode(
                         self.instaloader.context, shortcode
                     )
@@ -228,11 +228,11 @@ class InstagramHandler:
     def story_item(self, update: Update, context: CallbackContext) -> None:
         """Returns story items"""
         logging.info(str(update.message))
-        ig_story_item: bool = True
+        is_ig_story_item: bool = True
         if (self.whitelist is None) or (update.message.from_user.id in self.whitelist):
             if len(context.args) >= 1:
                 media_id: int = int(context.args[0])
-                if ig_story_item:
+                if is_ig_story_item:
                     story_item: PatchedStoryItem = PatchedStoryItem.from_mediaid(
                         self.instaloader.context, media_id
                     )
