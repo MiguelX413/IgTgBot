@@ -236,6 +236,8 @@ def shorten_formatted_caption(
                             .decode("UTF-16-le")
                         ),
                         url=long_entity.url,
+                        user=long_entity.user,
+                        language=long_entity.language,
                     )
                 )
         else:
@@ -245,6 +247,8 @@ def shorten_formatted_caption(
                     offset=long_entity.offset,
                     length=long_entity.length,
                     url=long_entity.url,
+                    user=long_entity.user,
+                    language=long_entity.language,
                 )
             )
 
