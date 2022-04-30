@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
 import logging
-from typing import List, Union, Set, Optional
+from typing import List, Optional, Set, Union
 from uuid import uuid4
 
 from instaloader import Instaloader
 from telegram import (
+    InlineQueryResult,
     InlineQueryResultArticle,
     InlineQueryResultPhoto,
     InlineQueryResultVideo,
-    InlineQueryResult,
-    InputTextMessageContent,
-    Update,
     InputMediaPhoto,
     InputMediaVideo,
+    InputTextMessageContent,
+    Update,
 )
 from telegram.constants import MAX_CAPTION_LENGTH
 from telegram.ext import CallbackContext
 
 from structures import (
     PatchedPost,
-    PostCaptions,
-    StoryItemCaptions,
-    PatchedStoryItem,
     PatchedProfile,
+    PatchedStoryItem,
+    PostCaptions,
     ProfileCaptions,
+    StoryItemCaptions,
 )
 
 

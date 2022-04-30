@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import logging
 import os
-from typing import Set, Optional
+from typing import Optional, Set
 
 from telegram import Update
 from telegram.ext import (
-    Updater,
-    InlineQueryHandler,
-    CommandHandler,
     CallbackContext,
+    CommandHandler,
     Dispatcher,
+    InlineQueryHandler,
+    Updater,
 )
 
 from instagram import InstagramHandler

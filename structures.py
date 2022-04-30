@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import re
-from typing import NamedTuple, List, Dict, Set, Optional
+from typing import Dict, List, NamedTuple, Optional, Set
 from unicodedata import normalize
 
-from instaloader import Post, InstaloaderContext, StoryItem, Profile
+from instaloader import InstaloaderContext, Post, Profile, StoryItem
 from telegram import MessageEntity, User
 from telegram.constants import (
     MAX_CAPTION_LENGTH,
-    MESSAGEENTITY_TEXT_LINK,
     MESSAGEENTITY_BOLD,
     MESSAGEENTITY_ITALIC,
+    MESSAGEENTITY_TEXT_LINK,
 )
 
 emojis: Dict[str, str] = {
