@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import logging
 import os
-from typing import Optional, Set
+from typing import List, Optional, Set
 
 from telegram import Update
 from telegram.ext import (
@@ -19,7 +19,7 @@ def start(update: Update, _: CallbackContext) -> None:
     update.message.reply_text("Hi, lmao", quote=True)
 
 
-def main(token: str, ig_user: str, whitelist: Set[int]) -> None:
+def main(token: str, ig_user: Optional[str], whitelist: Optional[Set[int]]) -> None:
     updater = Updater(token, use_context=True)
     dispatcher: Dispatcher = updater.dispatcher
 
@@ -109,10 +109,11 @@ if __name__ == "__main__":
     else:
         do_rich = False
 
+    logging_handlers: List[logging.Handler] = []
     if do_rich:
-        logging_handlers = [RichHandler(rich_tracebacks=True)]
+        logging_handlers.append(RichHandler(rich_tracebacks=True))
     else:
-        logging_handlers = [logging.StreamHandler()]
+        logging_handlers.append(logging.StreamHandler())
 
     if args.logfile:
         logging_handlers.append(logging.FileHandler("IgTgBot.log"))
