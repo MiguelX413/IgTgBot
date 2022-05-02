@@ -56,9 +56,8 @@ class InstagramHandler:
             )
             logging.info(str(post.__dict__))
             if post.typename == "GraphSidecar":
-                counter: int = 0
                 post_captions = PostCaptions(post)
-                for node in post.get_sidecar_nodes():
+                for counter, node in enumerate(post.get_sidecar_nodes()):
                     short = post_captions.short_caption(counter)
                     if node.is_video is True:
                         results.append(
@@ -95,7 +94,6 @@ class InstagramHandler:
                             thumb_url=node.display_url,
                         )
                     )
-                    counter += 1
 
             elif post.typename in ("GraphImage", "GraphVideo"):
                 post_captions = PostCaptions(post)
@@ -162,9 +160,8 @@ class InstagramHandler:
 
                     if post.typename == "GraphSidecar":
                         post_captions = PostCaptions(post)
-                        counter: int = 0
                         media_group: List[Union[InputMediaPhoto, InputMediaVideo]] = []
-                        for node in post.get_sidecar_nodes():
+                        for counter, node in enumerate(post.get_sidecar_nodes()):
                             short = post_captions.short_caption(counter)
                             if node.is_video is True:
                                 media_group.append(
@@ -182,7 +179,6 @@ class InstagramHandler:
                                         caption_entities=short.entities,
                                     )
                                 )
-                            counter += 1
                         for input_medium in media_group:
                             logging.info(input_medium)
                         first_reply = update.message.reply_media_group(
