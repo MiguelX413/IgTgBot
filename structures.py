@@ -171,7 +171,7 @@ class PatchedStoryItem(StoryItem):
 class PatchedProfile(Profile):
     @property
     def biography(self) -> str:
-        return optional_normalize(self._metadata("biography"))
+        return normalize("NFC", self._metadata("biography"))
 
     @property
     def biography_hashtags(self) -> List[str]:
