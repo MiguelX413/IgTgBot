@@ -68,7 +68,7 @@ class InstagramHandler:
                                 mime_type="video/mp4",
                                 thumb_url=node.display_url,
                                 title="Video",
-                                caption=short.caption,
+                                caption=short.text,
                                 caption_entities=short.entities,
                             )
                         )
@@ -80,7 +80,7 @@ class InstagramHandler:
                                 photo_url=node.display_url,
                                 thumb_url=node.display_url,
                                 title="Photo",
-                                caption=short.caption,
+                                caption=short.text,
                                 caption_entities=short.entities,
                             )
                         )
@@ -89,7 +89,7 @@ class InstagramHandler:
                             id=str(uuid4()),
                             title="URL",
                             input_message_content=InputTextMessageContent(
-                                short.caption,
+                                short.text,
                                 entities=short.entities,
                             ),
                             thumb_url=node.display_url,
@@ -108,7 +108,7 @@ class InstagramHandler:
                             video_url=post.video_url,
                             thumb_url=post.url,
                             mime_type="video/mp4",
-                            caption=short.caption,
+                            caption=short.text,
                             caption_entities=short.entities,
                         )
                     )
@@ -120,7 +120,7 @@ class InstagramHandler:
                             title="Photo",
                             photo_url=post.url,
                             thumb_url=post.url,
-                            caption=short.caption,
+                            caption=short.text,
                             caption_entities=short.entities,
                         )
                     )
@@ -129,7 +129,7 @@ class InstagramHandler:
                         id=str(uuid4()),
                         title="URL",
                         input_message_content=InputTextMessageContent(
-                            short.caption,
+                            short.text,
                             entities=short.entities,
                         ),
                         thumb_url=post.url,
@@ -170,7 +170,7 @@ class InstagramHandler:
                                 media_group.append(
                                     InputMediaVideo(
                                         media=node.video_url,
-                                        caption=short.caption,
+                                        caption=short.text,
                                         caption_entities=short.entities,
                                     )
                                 )
@@ -178,7 +178,7 @@ class InstagramHandler:
                                 media_group.append(
                                     InputMediaPhoto(
                                         media=node.display_url,
-                                        caption=short.caption,
+                                        caption=short.text,
                                         caption_entities=short.entities,
                                     )
                                 )
@@ -190,13 +190,10 @@ class InstagramHandler:
                             quote=True,
                         )
 
-                        if (
-                            len(post_captions.long_caption(0).caption)
-                            > MAX_CAPTION_LENGTH
-                        ):
+                        if len(post_captions.long_caption(0).text) > MAX_CAPTION_LENGTH:
                             long = post_captions.long_caption()
                             first_reply[post.mediacount - 1].reply_text(
-                                long.caption, entities=long.entities, quote=True
+                                long.text, entities=long.entities, quote=True
                             )
 
                     elif post.typename in ("GraphImage", "GraphVideo"):
@@ -206,7 +203,7 @@ class InstagramHandler:
                             first_reply = update.message.reply_video(
                                 video=post.video_url,
                                 quote=True,
-                                caption=short.caption,
+                                caption=short.text,
                                 caption_entities=short.entities,
                             )
 
@@ -214,13 +211,13 @@ class InstagramHandler:
                             first_reply = update.message.reply_photo(
                                 photo=post.url,
                                 quote=True,
-                                caption=short.caption,
+                                caption=short.text,
                                 caption_entities=short.entities,
                             )
                         long = post_captions.long_caption()
-                        if len(long.caption) > MAX_CAPTION_LENGTH:
+                        if len(long.text) > MAX_CAPTION_LENGTH:
                             first_reply.reply_text(
-                                long.caption, entities=long.entities, quote=True
+                                long.text, entities=long.entities, quote=True
                             )
                 else:
                     update.message.reply_text("Not an Instagram post", quote=True)
@@ -246,7 +243,7 @@ class InstagramHandler:
                         first_reply = update.message.reply_video(
                             video=story_item.video_url,
                             quote=True,
-                            caption=short.caption,
+                            caption=short.text,
                             caption_entities=short.entities,
                         )
 
@@ -254,13 +251,13 @@ class InstagramHandler:
                         first_reply = update.message.reply_photo(
                             photo=story_item.url,
                             quote=True,
-                            caption=short.caption,
+                            caption=short.text,
                             caption_entities=short.entities,
                         )
                     long = story_item_captions.long_caption()
-                    if len(long.caption) > MAX_CAPTION_LENGTH:
+                    if len(long.text) > MAX_CAPTION_LENGTH:
                         first_reply.reply_text(
-                            long.caption, entities=long.entities, quote=True
+                            long.text, entities=long.entities, quote=True
                         )
                 else:
                     update.message.reply_text("Not an Instagram story item", quote=True)
@@ -285,13 +282,13 @@ class InstagramHandler:
                     first_reply = update.message.reply_photo(
                         photo=profile.profile_pic_url,
                         quote=True,
-                        caption=short.caption,
+                        caption=short.text,
                         caption_entities=short.entities,
                     )
                     long = profile_captions.long_caption()
-                    if len(long.caption) > MAX_CAPTION_LENGTH:
+                    if len(long.text) > MAX_CAPTION_LENGTH:
                         first_reply.reply_text(
-                            long.caption, entities=long.entities, quote=True
+                            long.text, entities=long.entities, quote=True
                         )
                 else:
                     update.message.reply_text("Not an Instagram profile", quote=True)
@@ -316,13 +313,13 @@ class InstagramHandler:
                     first_reply = update.message.reply_photo(
                         photo=profile.profile_pic_url,
                         quote=True,
-                        caption=short.caption,
+                        caption=short.text,
                         caption_entities=short.entities,
                     )
                     long = profile_captions.long_caption()
-                    if len(long.caption) > MAX_CAPTION_LENGTH:
+                    if len(long.text) > MAX_CAPTION_LENGTH:
                         first_reply.reply_text(
-                            long.caption, entities=long.entities, quote=True
+                            long.text, entities=long.entities, quote=True
                         )
                 else:
                     update.message.reply_text("Not an Instagram profile", quote=True)
