@@ -81,14 +81,14 @@ class PatchedPost(Post):
         """List of all lowercased hashtags (without preceeding #) that occur in the Post's caption."""
         if not self.caption:
             return []
-        return re.findall(hashtag_regex, self.caption.lower())
+        return hashtag_regex.findall(self.caption.lower())
 
     @property
     def caption_mentions(self) -> List[str]:
         """List of all lowercased profiles that are mentioned in the Post's caption, without preceeding @."""
         if not self.caption:
             return []
-        return re.findall(mention_regex, self.caption.lower())
+        return mention_regex.findall(self.caption.lower())
 
     @property
     def context(self) -> InstaloaderContext:
@@ -158,14 +158,14 @@ class PatchedStoryItem(StoryItem):
         """List of all lowercased hashtags (without preceeding #) that occur in the Post's caption."""
         if not self.caption:
             return []
-        return re.findall(hashtag_regex, self.caption.lower())
+        return hashtag_regex.findall(self.caption.lower())
 
     @property
     def caption_mentions(self) -> List[str]:
         """List of all lowercased profiles that are mentioned in the Post's caption, without preceeding @."""
         if not self.caption:
             return []
-        return re.findall(mention_regex, self.caption.lower())
+        return mention_regex.findall(self.caption.lower())
 
 
 class PatchedProfile(Profile):
@@ -178,14 +178,14 @@ class PatchedProfile(Profile):
         """List of all lowercased hashtags (without preceeding #) that occur in the Profile's biography."""
         if not self.biography:
             return []
-        return re.findall(hashtag_regex, self.biography.lower())
+        return hashtag_regex.findall(self.biography.lower())
 
     @property
     def biography_mentions(self) -> List[str]:
         """List of all lowercased profiles that are mentioned in the Profile's biography, without preceeding @."""
         if not self.biography:
             return []
-        return re.findall(mention_regex, self.biography.lower())
+        return mention_regex.findall(self.biography.lower())
 
 
 class FormattedText:
