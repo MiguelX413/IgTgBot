@@ -105,7 +105,7 @@ class PatchedPost(Post):
             return self.owner_profile.username
 
     @property
-    def tagged_users(self) -> List[TaggedUser]:
+    def patched_tagged_users(self) -> List[TaggedUser]:
         """List of all users that are tagged in the Post."""
         try:
             return [
@@ -334,9 +334,9 @@ class PostCaptions:
             formatted_text.append("\n")
 
         # Tagged Users
-        if len(self._post.tagged_users) > 0:
+        if len(self._post.patched_tagged_users) > 0:
             formatted_text.append(emojis["person"])
-            for tagged_user in self._post.tagged_users:
+            for tagged_user in self._post.patched_tagged_users:
                 formatted_text.append(" ")
                 formatted_text.append(
                     f"@{tagged_user.username}",
