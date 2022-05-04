@@ -15,7 +15,7 @@ from telegram.ext import (
 from instagram import InstagramHandler
 
 
-def start(update: Update, _: CallbackContext) -> None:
+def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text("Hi, lmao", quote=True)
 
 
