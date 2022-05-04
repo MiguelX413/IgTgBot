@@ -29,7 +29,7 @@ from structures import (
 
 class InstagramHandler:
     instaloader: Instaloader
-    whitelist: Set[int]
+    whitelist: Optional[Set[int]]
 
     def __init__(self, ig_user: Optional[str], whitelist: Optional[Set[int]]) -> None:
         self.whitelist = whitelist
