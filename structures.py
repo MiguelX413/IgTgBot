@@ -219,6 +219,9 @@ class FormattedText:
             )
         self.text += text
 
+    def __len__(self) -> int:
+        return len(self.text)
+
 
 def shorten_formatted_text(
     formatted_text: FormattedText, length: int = MAX_CAPTION_LENGTH
