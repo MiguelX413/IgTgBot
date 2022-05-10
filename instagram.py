@@ -291,7 +291,7 @@ class InstagramHandler:
         else:
             update.message.reply_text("Unauthorized user", quote=True)
 
-    def profileid(self, update: Update, context: CallbackContext) -> None:
+    def profile_id(self, update: Update, context: CallbackContext) -> None:
         """Returns Instagram profiles"""
         logging.info(str(update.message))
         is_ig_profile: bool = True

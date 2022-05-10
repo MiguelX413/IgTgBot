@@ -29,7 +29,7 @@ def main(token: str, ig_user: Optional[str], whitelist: Optional[Set[int]]) -> N
     dispatcher.add_handler(CommandHandler("p", instagram_handler.posts))
     dispatcher.add_handler(CommandHandler("storyitem", instagram_handler.story_item))
     dispatcher.add_handler(CommandHandler("profile", instagram_handler.profile))
-    dispatcher.add_handler(CommandHandler("profileid", instagram_handler.profileid))
+    dispatcher.add_handler(CommandHandler("profileid", instagram_handler.profile_id))
 
     dispatcher.add_handler(InlineQueryHandler(instagram_handler.inlinequery))
 
