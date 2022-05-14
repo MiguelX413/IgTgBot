@@ -16,6 +16,8 @@ from instagram import InstagramHandler
 
 
 def start(update: Update, context: CallbackContext) -> None:
+    if update.message is None:
+        return
     update.message.reply_text("Hi, lmao", quote=True)
 
 
@@ -129,11 +131,12 @@ if __name__ == "__main__":
     if "TG_TOKEN" in os.environ:
         logging.info("TG_TOKEN: %s", os.environ.get("TG_TOKEN"))
 
+    user_whitelist: Optional[Set[int]]
     if args.whitelist is None:
-        user_whitelist: Optional[Set[int]] = None
+        user_whitelist = None
         logging.info("No authorized users specified")
     else:
-        user_whitelist: Optional[Set[int]] = set(args.whitelist)
+        user_whitelist = set(args.whitelist)
         logging.info("Authorized users: %s", user_whitelist)
 
     main(

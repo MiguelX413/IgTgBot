@@ -9,6 +9,8 @@ from telegram import (
     InlineQueryResultArticle,
     InlineQueryResultPhoto,
     InlineQueryResultVideo,
+    InputMediaAudio,
+    InputMediaDocument,
     InputMediaPhoto,
     InputMediaVideo,
     InputTextMessageContent,
@@ -47,6 +49,8 @@ class InstagramHandler:
         """Produces results for Inline Queries"""
         logging.info(update.inline_query)
 
+        if update.inline_query is None:
+            return
         # Check if there is anything typed in the inline query
         if update.inline_query.query in ("", None):
             return
@@ -118,7 +122,7 @@ class InstagramHandler:
         elif post.typename in ("GraphImage", "GraphVideo"):
             post_captions = PostCaptions(post)
             short = post_captions.short_caption()
-            if post.typename == "GraphVideo":
+            if (post.typename == "GraphVideo") and (post.video_url is not None):
                 results.append(
                     InlineQueryResultVideo(
                         id=str(uuid4()),
@@ -159,13 +163,17 @@ class InstagramHandler:
         """Returns posts"""
         logging.info(str(update.message))
 
+        if update.message is None:
+            return
+
         if (self.whitelist is not None) and (
-            update.message.from_user.id not in self.whitelist
+            (update.message.from_user is not None)
+            and (update.message.from_user.id not in self.whitelist)
         ):
             update.message.reply_text("Unauthorized user", quote=True)
             return
 
-        if len(context.args) < 1:
+        if (context.args is None) or (len(context.args) < 1):
             update.message.reply_text("Please run the command with a shortcode.")
             return
 
@@ -182,7 +190,14 @@ class InstagramHandler:
 
         if post.typename == "GraphSidecar":
             post_captions = PostCaptions(post)
-            media_group: List[Union[InputMediaPhoto, InputMediaVideo]] = []
+            media_group: List[
+                Union[
+                    InputMediaAudio,
+                    InputMediaDocument,
+                    InputMediaPhoto,
+                    InputMediaVideo,
+                ]
+            ] = []
             for counter, node in enumerate(post.get_sidecar_nodes()):
                 short = post_captions.short_caption(counter)
                 if node.is_video is True:
@@ -206,18 +221,16 @@ class InstagramHandler:
             first_reply = update.message.reply_media_group(
                 media=media_group,
                 quote=True,
-            )
+            )[-1]
 
             if len(post_captions.long_caption(0).text) > MAX_CAPTION_LENGTH:
                 long = post_captions.long_caption()
-                first_reply[post.mediacount - 1].reply_text(
-                    long.text, entities=long.entities, quote=True
-                )
+                first_reply.reply_text(long.text, entities=long.entities, quote=True)
 
         elif post.typename in ("GraphImage", "GraphVideo"):
             post_captions = PostCaptions(post)
             short = post_captions.short_caption()
-            if post.typename == "GraphVideo":
+            if (post.typename == "GraphVideo") and (post.video_url is not None):
                 first_reply = update.message.reply_video(
                     video=post.video_url,
                     quote=True,
@@ -239,12 +252,16 @@ class InstagramHandler:
     def story_item(self, update: Update, context: CallbackContext) -> None:
         """Returns story items"""
         logging.info(str(update.message))
+
+        if (update.message is None) or (update.message.from_user is None):
+            return
+
         if (self.whitelist is not None) and (
             update.message.from_user.id not in self.whitelist
         ):
             update.message.reply_text("Unauthorized user", quote=True)
             return
-        if len(context.args) < 1:
+        if (context.args is None) or (len(context.args) < 1):
             update.message.reply_text("Please run the command with a storyitem ID.")
             return
         media_id: int = int(context.args[0])
@@ -259,7 +276,7 @@ class InstagramHandler:
 
         story_item_captions = StoryItemCaptions(story_item)
         short = story_item_captions.short_caption()
-        if story_item.is_video:
+        if story_item.is_video and (story_item.video_url is not None):
             first_reply = update.message.reply_video(
                 video=story_item.video_url,
                 quote=True,
@@ -281,12 +298,16 @@ class InstagramHandler:
     def profile(self, update: Update, context: CallbackContext) -> None:
         """Returns Instagram profiles"""
         logging.info(str(update.message))
+
+        if update.message is None or update.message.from_user is None:
+            return
+
         if (self.whitelist is not None) and (
             update.message.from_user.id not in self.whitelist
         ):
             update.message.reply_text("Unauthorized user", quote=True)
             return
-        if len(context.args) < 1:
+        if (context.args is None) or (len(context.args) < 1):
             update.message.reply_text("Please run the command with a profile username.")
             return
         profile_username: str = context.args[0]
@@ -314,12 +335,16 @@ class InstagramHandler:
     def profile_id(self, update: Update, context: CallbackContext) -> None:
         """Returns Instagram profiles"""
         logging.info(str(update.message))
+
+        if (update.message is None) or (update.message.from_user is None):
+            return
+
         if (self.whitelist is not None) and (
             update.message.from_user.id not in self.whitelist
         ):
             update.message.reply_text("Unauthorized user", quote=True)
             return
-        if len(context.args) < 1:
+        if (context.args is None) or (len(context.args) < 1):
             update.message.reply_text("Please run the command with a profile username.")
             return
         profile_id: int = int(context.args[0])
