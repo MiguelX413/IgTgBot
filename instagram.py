@@ -119,7 +119,7 @@ class InstagramHandler:
                     )
                 )
 
-        elif post.typename in ("GraphImage", "GraphVideo"):
+        else:
             post_captions = PostCaptions(post)
             short = post_captions.short_caption()
             if (post.typename == "GraphVideo") and (post.video_url is not None):
@@ -227,7 +227,7 @@ class InstagramHandler:
                 long = post_captions.long_caption()
                 first_reply.reply_text(long.text, entities=long.entities, quote=True)
 
-        elif post.typename in ("GraphImage", "GraphVideo"):
+        else:
             post_captions = PostCaptions(post)
             short = post_captions.short_caption()
             if (post.typename == "GraphVideo") and (post.video_url is not None):
@@ -239,6 +239,12 @@ class InstagramHandler:
                 )
 
             else:
+                if post.typename != "GraphImage":
+                    logging.info("Post type irregular: %s", post.typename)
+                    update.message.reply_text(
+                        f"Invalid type: {post.typename}, will try to send as image.",
+                        quote=True,
+                    )
                 first_reply = update.message.reply_photo(
                     photo=post.url,
                     quote=True,
