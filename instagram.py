@@ -190,7 +190,9 @@ class InstagramHandler:
             return
 
         if (context.args is None) or (len(context.args) < 1):
-            update.message.reply_text("Please run the command with a shortcode.")
+            update.message.reply_text(
+                "Please run the command with a shortcode.", quote=True
+            )
             return
 
         shortcode: str = context.args[0]
@@ -287,7 +289,9 @@ class InstagramHandler:
             update.message.reply_text("Unauthorized user", quote=True)
             return
         if (context.args is None) or (len(context.args) < 1):
-            update.message.reply_text("Please run the command with a storyitem ID.")
+            update.message.reply_text(
+                "Please run the command with a storyitem ID.", quote=True
+            )
             return
         media_id: int = int(context.args[0])
         is_ig_story_item: bool = True
@@ -333,7 +337,9 @@ class InstagramHandler:
             update.message.reply_text("Unauthorized user", quote=True)
             return
         if (context.args is None) or (len(context.args) < 1):
-            update.message.reply_text("Please run the command with a profile username.")
+            update.message.reply_text(
+                "Please run the command with a profile username.", quote=True
+            )
             return
         profile_username: str = context.args[0]
         is_ig_profile: bool = True
@@ -370,7 +376,9 @@ class InstagramHandler:
             update.message.reply_text("Unauthorized user", quote=True)
             return
         if (context.args is None) or (len(context.args) < 1):
-            update.message.reply_text("Please run the command with a profile username.")
+            update.message.reply_text(
+                "Please run the command with a profile username.", quote=True
+            )
             return
         profile_id: int = int(context.args[0])
         is_ig_profile: bool = True
