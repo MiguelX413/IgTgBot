@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import logging
-from typing import List, Optional, Set, Union
+from types import TracebackType
+from typing import List, Optional, Set, Type, Union
 from uuid import uuid4
 
 from instaloader import Instaloader
@@ -45,6 +46,20 @@ class InstagramHandler:
                 instaloader.interactive_login(ig_user)
             instaloader.save_session_to_file()
         self.instaloader = instaloader
+
+    def __enter__(self):
+        return self
+
+    def close(self) -> None:
+        return self.instaloader.close()
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
+        return self.close()
 
     def inlinequery(self, update: Update, context: CallbackContext) -> None:
         """Produces results for Inline Queries"""

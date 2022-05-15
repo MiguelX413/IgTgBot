@@ -22,21 +22,24 @@ def start(update: Update, context: CallbackContext) -> None:
 
 
 def main(token: str, ig_user: Optional[str], whitelist: Optional[Set[int]]) -> None:
-    updater = Updater(token, use_context=True)
-    dispatcher: Dispatcher = updater.dispatcher
+    with InstagramHandler(ig_user, whitelist) as instagram_handler:
+        updater = Updater(token, use_context=True)
+        dispatcher: Dispatcher = updater.dispatcher
 
-    instagram_handler = InstagramHandler(ig_user, whitelist)
+        dispatcher.add_handler(CommandHandler("start", start))
+        dispatcher.add_handler(CommandHandler("p", instagram_handler.posts))
+        dispatcher.add_handler(
+            CommandHandler("storyitem", instagram_handler.story_item)
+        )
+        dispatcher.add_handler(CommandHandler("profile", instagram_handler.profile))
+        dispatcher.add_handler(
+            CommandHandler("profileid", instagram_handler.profile_id)
+        )
 
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("p", instagram_handler.posts))
-    dispatcher.add_handler(CommandHandler("storyitem", instagram_handler.story_item))
-    dispatcher.add_handler(CommandHandler("profile", instagram_handler.profile))
-    dispatcher.add_handler(CommandHandler("profileid", instagram_handler.profile_id))
+        dispatcher.add_handler(InlineQueryHandler(instagram_handler.inlinequery))
 
-    dispatcher.add_handler(InlineQueryHandler(instagram_handler.inlinequery))
-
-    updater.start_polling()
-    updater.idle()
+        updater.start_polling()
+        updater.idle()
 
 
 if __name__ == "__main__":
