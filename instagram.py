@@ -14,6 +14,7 @@ from telegram import (
     InputMediaPhoto,
     InputMediaVideo,
     InputTextMessageContent,
+    Message,
     Update,
 )
 from telegram.constants import MAX_CAPTION_LENGTH
@@ -218,20 +219,16 @@ class InstagramHandler:
                     )
             for input_medium in media_group:
                 logging.info(input_medium)
-            first_reply = update.message.reply_media_group(
+            media_reply: Optional[Message] = update.message.reply_media_group(
                 media=media_group,
                 quote=True,
             )[-1]
-
-            if len(post_captions.long_caption(0).text) > MAX_CAPTION_LENGTH:
-                long = post_captions.long_caption()
-                first_reply.reply_text(long.text, entities=long.entities, quote=True)
 
         else:
             post_captions = PostCaptions(post)
             short = post_captions.short_caption()
             if (post.typename == "GraphVideo") and (post.video_url is not None):
-                first_reply = update.message.reply_video(
+                media_reply = update.message.reply_video(
                     video=post.video_url,
                     quote=True,
                     caption=short.text,
@@ -245,15 +242,22 @@ class InstagramHandler:
                         f"Invalid type: {post.typename}, will try to send as image.",
                         quote=True,
                     )
-                first_reply = update.message.reply_photo(
+                media_reply = update.message.reply_photo(
                     photo=post.url,
                     quote=True,
                     caption=short.text,
                     caption_entities=short.entities,
                 )
-            long = post_captions.long_caption()
-            if len(long.text) > MAX_CAPTION_LENGTH:
-                first_reply.reply_text(long.text, entities=long.entities, quote=True)
+
+        long = post_captions.long_caption()
+        if (media_reply is not None) and (
+            (len(long) > MAX_CAPTION_LENGTH)
+            or (
+                (post.typename == "GraphSidecar")
+                and (len(post_captions.long_caption(0)) > MAX_CAPTION_LENGTH)
+            )
+        ):
+            media_reply.reply_text(long.text, entities=long.entities, quote=True)
 
     def story_item(self, update: Update, context: CallbackContext) -> None:
         """Returns story items"""
