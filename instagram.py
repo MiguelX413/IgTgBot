@@ -86,6 +86,7 @@ class InstagramHandler:
                     )
                 ],
                 cache_time=300,
+                is_personal=True,
             )
             return
 
