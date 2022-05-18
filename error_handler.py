@@ -32,35 +32,37 @@ class ErrorHandler:
         if context.error is None:
             return
 
-        if not isinstance(update, Update):
-            raise context.error
-
-        exception_sting: str = f"{type(context.error).__qualname__}: {context.error!s}"
-
-        if (update.message is not None) and (
-            (self.whitelist is None)
-            or (
-                (update.message.from_user is not None)
-                and (update.message.from_user.id in self.whitelist)
+        if isinstance(update, Update):
+            exception_sting: str = (
+                f"{type(context.error).__qualname__}: {context.error!s}"
             )
-        ):
-            update.message.reply_text(exception_sting, quote=True)
 
-        if (update.inline_query is not None) and (
-            (self.whitelist is None)
-            or (update.inline_query.from_user.id in self.whitelist)
-        ):
-            update.inline_query.answer(
-                [
-                    InlineQueryResultArticle(
-                        id=str(uuid4()),
-                        title=type(context.error).__qualname__,
-                        description=exception_sting,
-                        input_message_content=InputTextMessageContent(exception_sting),
-                    )
-                ],
-                cache_time=300,
-                is_personal=True,
-            )
+            if (update.message is not None) and (
+                (self.whitelist is None)
+                or (
+                    (update.message.from_user is not None)
+                    and (update.message.from_user.id in self.whitelist)
+                )
+            ):
+                update.message.reply_text(exception_sting, quote=True)
+
+            if (update.inline_query is not None) and (
+                (self.whitelist is None)
+                or (update.inline_query.from_user.id in self.whitelist)
+            ):
+                update.inline_query.answer(
+                    [
+                        InlineQueryResultArticle(
+                            id=str(uuid4()),
+                            title=type(context.error).__qualname__,
+                            description=exception_sting,
+                            input_message_content=InputTextMessageContent(
+                                exception_sting
+                            ),
+                        )
+                    ],
+                    cache_time=300,
+                    is_personal=True,
+                )
 
         raise context.error
