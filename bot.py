@@ -12,6 +12,7 @@ from telegram.ext import (
     Updater,
 )
 
+from error_handler import ErrorHandler
 from instagram import InstagramHandler
 
 
@@ -22,9 +23,13 @@ def start(update: Update, context: CallbackContext) -> None:
 
 
 def main(token: str, ig_user: Optional[str], whitelist: Optional[Set[int]]) -> None:
-    with InstagramHandler(ig_user, whitelist) as instagram_handler:
+    with InstagramHandler(ig_user, whitelist) as instagram_handler, ErrorHandler(
+        whitelist
+    ) as error_handler:
         updater = Updater(token, use_context=True)
         dispatcher: Dispatcher = updater.dispatcher
+
+        dispatcher.add_error_handler(error_handler.error_handler)  # type: ignore
 
         dispatcher.add_handler(CommandHandler("start", start))
         dispatcher.add_handler(CommandHandler("p", instagram_handler.posts))
