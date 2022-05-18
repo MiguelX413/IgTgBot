@@ -294,7 +294,13 @@ class InstagramHandler:
                 "Please run the command with a storyitem ID.", quote=True
             )
             return
-        media_id: int = int(context.args[0])
+
+        try:
+            media_id: int = int(context.args[0])
+        except ValueError:
+            update.message.reply_text("Invalid storyitem ID.", quote=True)
+            return
+
         is_ig_story_item: bool = True
         if not is_ig_story_item:
             update.message.reply_text("Not an Instagram story item", quote=True)
@@ -378,10 +384,16 @@ class InstagramHandler:
             return
         if (context.args is None) or (len(context.args) < 1):
             update.message.reply_text(
-                "Please run the command with a profile username.", quote=True
+                "Please run the command with a profile ID.", quote=True
             )
             return
-        profile_id: int = int(context.args[0])
+
+        try:
+            profile_id: int = int(context.args[0])
+        except ValueError:
+            update.message.reply_text("Invalid profile ID.", quote=True)
+            return
+
         is_ig_profile: bool = True
         if not is_ig_profile:
             update.message.reply_text("Not an Instagram profile", quote=True)
