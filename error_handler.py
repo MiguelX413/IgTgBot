@@ -35,6 +35,8 @@ class ErrorHandler:
         if not isinstance(update, Update):
             raise context.error
 
+        exception_sting: str = f"{type(context.error).__qualname__}: {context.error!s}"
+
         if (update.message is not None) and (
             (self.whitelist is None)
             or (
@@ -42,7 +44,7 @@ class ErrorHandler:
                 and (update.message.from_user.id in self.whitelist)
             )
         ):
-            update.message.reply_text(repr(context.error), quote=True)
+            update.message.reply_text(exception_sting, quote=True)
 
         if (update.inline_query is not None) and (
             (self.whitelist is None)
@@ -55,10 +57,9 @@ class ErrorHandler:
                 [
                     InlineQueryResultArticle(
                         id=str(uuid4()),
-                        title=repr(context.error),
-                        input_message_content=InputTextMessageContent(
-                            repr(context.error)
-                        ),
+                        title=type(context.error).__qualname__,
+                        description=exception_sting,
+                        input_message_content=InputTextMessageContent(exception_sting),
                     )
                 ],
                 cache_time=300,
