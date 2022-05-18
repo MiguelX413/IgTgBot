@@ -48,10 +48,7 @@ class ErrorHandler:
 
         if (update.inline_query is not None) and (
             (self.whitelist is None)
-            or (
-                (update.inline_query.from_user.id is not None)
-                and (update.inline_query.from_user.id in self.whitelist)
-            )
+            or (update.inline_query.from_user.id in self.whitelist)
         ):
             update.inline_query.answer(
                 [
