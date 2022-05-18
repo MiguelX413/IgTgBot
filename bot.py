@@ -29,7 +29,7 @@ def main(token: str, ig_user: Optional[str], whitelist: Optional[Set[int]]) -> N
         updater = Updater(token, use_context=True)
         dispatcher: Dispatcher = updater.dispatcher
 
-        dispatcher.add_error_handler(error_handler.error_handler)  # type: ignore
+        dispatcher.add_error_handler(error_handler.error_handler)
 
         dispatcher.add_handler(CommandHandler("start", start))
         dispatcher.add_handler(CommandHandler("p", instagram_handler.posts))

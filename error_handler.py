@@ -27,10 +27,13 @@ class ErrorHandler:
     ) -> None:
         return self.close()
 
-    def error_handler(self, update: Update, context: CallbackContext) -> None:
+    def error_handler(self, update: object, context: CallbackContext) -> None:
         """Handles errors for the bot"""
         if context.error is None:
             return
+
+        if not isinstance(update, Update):
+            raise context.error
 
         if (update.message is not None) and (
             (self.whitelist is None)
