@@ -281,14 +281,17 @@ class InstagramHandler:
         """Returns story items"""
         logging.info(str(update.message))
 
-        if (update.message is None) or (update.message.from_user is None):
+        if update.message is None:
             return
 
-        if (self.whitelist is not None) and (
-            update.message.from_user.id not in self.whitelist
+        if (
+            (self.whitelist is not None)
+            and (update.message.from_user is not None)
+            and (update.message.from_user.id not in self.whitelist)
         ):
             update.message.reply_text("Unauthorized user", quote=True)
             return
+
         if (context.args is None) or (len(context.args) < 1):
             update.message.reply_text(
                 "Please run the command with a storyitem ID.", quote=True
@@ -335,11 +338,13 @@ class InstagramHandler:
         """Returns Instagram profiles"""
         logging.info(str(update.message))
 
-        if update.message is None or update.message.from_user is None:
+        if update.message is None:
             return
 
-        if (self.whitelist is not None) and (
-            update.message.from_user.id not in self.whitelist
+        if (
+            (self.whitelist is not None)
+            and (update.message.from_user is not None)
+            and (update.message.from_user.id not in self.whitelist)
         ):
             update.message.reply_text("Unauthorized user", quote=True)
             return
@@ -374,11 +379,13 @@ class InstagramHandler:
         """Returns Instagram profiles"""
         logging.info(str(update.message))
 
-        if (update.message is None) or (update.message.from_user is None):
+        if update.message is None:
             return
 
-        if (self.whitelist is not None) and (
-            update.message.from_user.id not in self.whitelist
+        if (
+            (self.whitelist is not None)
+            and (update.message.from_user is not None)
+            and (update.message.from_user.id not in self.whitelist)
         ):
             update.message.reply_text("Unauthorized user", quote=True)
             return
