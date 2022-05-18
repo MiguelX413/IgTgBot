@@ -134,9 +134,8 @@ if __name__ == "__main__":
     if "TG_TOKEN" in os.environ:
         logging.info("TG_TOKEN: %s", os.environ.get("TG_TOKEN"))
 
-    user_whitelist: Optional[Set[int]]
     if args.whitelist is None:
-        user_whitelist = None
+        user_whitelist: Optional[Set[int]] = None
         logging.info("No authorized users specified")
     else:
         user_whitelist = set(args.whitelist)
