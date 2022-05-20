@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
-import re
+import logging
 from typing import Dict, List, NamedTuple, Optional, Set
 from unicodedata import normalize
+
+try:
+    import regex as re
+except ImportError:
+    logging.info("Could not find regex module, using built-in re.")
+    import re
 
 from instaloader import InstaloaderContext, Post, Profile, StoryItem
 from telegram import MessageEntity, User
