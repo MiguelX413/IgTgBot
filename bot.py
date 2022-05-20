@@ -114,7 +114,7 @@ if __name__ == "__main__":
     if args.rich:
         try:
             from rich.logging import RichHandler
-        except ModuleNotFoundError:
+        except ImportError:
             do_rich = False
     else:
         do_rich = False
