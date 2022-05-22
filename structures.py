@@ -7,7 +7,7 @@ try:
     import regex as re
 except ImportError:
     logging.info("Could not find regex module, using built-in re.")
-    import re
+    import re  # type: ignore
 
 from instaloader import InstaloaderContext, Post, Profile, StoryItem
 from telegram import MessageEntity, User
