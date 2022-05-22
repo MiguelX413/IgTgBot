@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-import logging
 from typing import Dict, List, NamedTuple, Optional, Set
 from unicodedata import normalize
 
 try:
     import regex as re
 except ImportError:
-    logging.info("Could not find regex module, using built-in re.")
+    print("Could not find regex module, using built-in re.")
     import re  # type: ignore
 
 from instaloader import InstaloaderContext, Post, Profile, StoryItem
