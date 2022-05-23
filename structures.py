@@ -34,7 +34,7 @@ else:
 
 
 mention_regex = re.compile(
-    r"(?:^|\W|_)(?:@)(\w(?:(?:\w|(?:\.(?!\.))){0,28}(?:\w))?)", re.ASCII
+    r"(?:@)(?!\d+$)(\w(?:(?:\w|(?:\.(?!\.))){0,28}(?:\w))?)", re.ASCII
 )
 
 # def parse_for_shortcodes(text: str) -> List[str]:
