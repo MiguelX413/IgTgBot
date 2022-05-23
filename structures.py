@@ -2,12 +2,6 @@
 from typing import Dict, List, NamedTuple, Optional, Set
 from unicodedata import normalize
 
-try:
-    import regex as re
-except ImportError:
-    print("Could not find regex module, using built-in re.")
-    import re  # type: ignore
-
 from instaloader import InstaloaderContext, Post, Profile, StoryItem
 from telegram import MessageEntity, User
 from telegram.constants import (
@@ -26,7 +20,19 @@ emojis: Dict[str, str] = {
     "calendar": "📅",
 }
 
-hashtag_regex = re.compile(r"(?:#)(\w(?:(?:\w|(?:\.(?!\.))){0,28}(?:\w))?)")
+try:
+    import regex as re
+
+except ImportError:
+    print("Could not find regex module, using built-in re.")
+    import re  # type: ignore
+
+    hashtag_regex = re.compile(r"(?:#)((?:\w){1,150})")
+
+else:
+    hashtag_regex = re.compile(r"(?:#)((?:\w|\p{Extended_Pictographic}){1,150})")
+
+
 mention_regex = re.compile(
     r"(?:^|\W|_)(?:@)(\w(?:(?:\w|(?:\.(?!\.))){0,28}(?:\w))?)", re.ASCII
 )
