@@ -25,7 +25,7 @@ try:
 
 except ImportError:
     print("Could not find regex module, using built-in re.")
-    import re  # type: ignore
+    import re  # type: ignore[no-redef]
 
     hashtag_regex = re.compile(r"(?:#)((?:\w){1,150})")
 
