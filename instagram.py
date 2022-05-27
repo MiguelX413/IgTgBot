@@ -65,7 +65,7 @@ class InstagramHandler:
         logging.info(update.inline_query)
 
         if update.inline_query is None:
-            return
+            raise ValueError("Expected update.inline_query to not be None.")
         # Check if there is anything typed in the inline query
         if update.inline_query.query in ("", None):
             return
@@ -180,7 +180,7 @@ class InstagramHandler:
         logging.info(str(update.message))
 
         if update.message is None:
-            return
+            raise ValueError("Expected update.message to not be None.")
 
         if (self.whitelist is not None) and (
             (update.message.from_user is not None)
@@ -281,7 +281,7 @@ class InstagramHandler:
         logging.info(str(update.message))
 
         if update.message is None:
-            return
+            raise ValueError("Expected update.message to not be None.")
 
         if (
             (self.whitelist is not None)
@@ -338,7 +338,7 @@ class InstagramHandler:
         logging.info(str(update.message))
 
         if update.message is None:
-            return
+            raise ValueError("Expected update.message to not be None.")
 
         if (
             (self.whitelist is not None)
@@ -379,7 +379,7 @@ class InstagramHandler:
         logging.info(str(update.message))
 
         if update.message is None:
-            return
+            raise ValueError("Expected update.message to not be None.")
 
         if (
             (self.whitelist is not None)

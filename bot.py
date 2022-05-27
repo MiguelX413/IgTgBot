@@ -18,7 +18,7 @@ from instagram import InstagramHandler
 
 def start(update: Update, context: CallbackContext) -> None:
     if update.message is None:
-        return
+        raise ValueError("Expected update.message to not be None.")
     update.message.reply_text("Hi, lmao", quote=True)
 
 

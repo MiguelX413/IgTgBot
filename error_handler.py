@@ -30,7 +30,7 @@ class ErrorHandler:
     def error_handler(self, update: object, context: CallbackContext) -> None:
         """Handles errors for the bot"""
         if context.error is None:
-            return
+            raise ValueError("Expected context.error to have value.")
 
         if isinstance(update, Update):
             exception_sting: str = (
