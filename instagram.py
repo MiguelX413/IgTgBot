@@ -38,14 +38,13 @@ class InstagramHandler:
     def __init__(self, ig_user: Optional[str], whitelist: Optional[Set[int]]) -> None:
         self.whitelist = whitelist
 
-        instaloader = Instaloader()
+        self.instaloader = Instaloader()
         if ig_user is not None:
             try:
-                instaloader.load_session_from_file(username=ig_user)
+                self.instaloader.load_session_from_file(username=ig_user)
             except FileNotFoundError:
-                instaloader.interactive_login(ig_user)
-            instaloader.save_session_to_file()
-        self.instaloader = instaloader
+                self.instaloader.interactive_login(ig_user)
+            self.instaloader.save_session_to_file()
 
     def __enter__(self):
         return self
