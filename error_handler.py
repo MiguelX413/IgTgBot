@@ -54,7 +54,7 @@ class ErrorHandler:
                     [
                         InlineQueryResultArticle(
                             id=str(uuid4()),
-                            title=type(context.error).__qualname__,
+                            title="Exception",
                             description=exception_sting,
                             input_message_content=InputTextMessageContent(
                                 exception_sting
