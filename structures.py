@@ -204,9 +204,9 @@ class FormattedText:
     entities: List[MessageEntity] = []
 
     def __init__(
-        self, caption: str = "", entities: Optional[List[MessageEntity]] = None
+        self, text: str = "", entities: Optional[List[MessageEntity]] = None
     ) -> None:
-        self.text = caption
+        self.text = text
         self.entities = entities or []
 
     def append(
