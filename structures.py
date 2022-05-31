@@ -200,8 +200,8 @@ class PatchedProfile(Profile):
 
 
 class FormattedText:
-    text: str = ""
-    entities: List[MessageEntity] = []
+    text: str
+    entities: List[MessageEntity]
 
     def __init__(
         self, text: str = "", entities: Optional[List[MessageEntity]] = None
