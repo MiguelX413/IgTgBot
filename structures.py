@@ -281,30 +281,26 @@ def shorten_formatted_text(
                 )
                 < length
             ):
-                output_formatted_text.entities.append(
-                    MessageEntity(
-                        type=long_entity.type,
-                        offset=long_entity.offset,
-                        length=utf16len(
-                            formatted_text.text[: length - 1]
-                            .encode("UTF-16-le")[2 * long_entity.offset :]
-                            .decode("UTF-16-le")
-                        ),
-                        url=long_entity.url,
-                        user=long_entity.user,
-                        language=long_entity.language,
-                    )
-                )
-        else:
-            output_formatted_text.entities.append(
-                MessageEntity(
+                output_formatted_text.add_entity(
                     type=long_entity.type,
                     offset=long_entity.offset,
-                    length=long_entity.length,
+                    length=utf16len(
+                        formatted_text.text[: length - 1]
+                        .encode("UTF-16-le")[2 * long_entity.offset :]
+                        .decode("UTF-16-le")
+                    ),
                     url=long_entity.url,
                     user=long_entity.user,
                     language=long_entity.language,
                 )
+        else:
+            output_formatted_text.add_entity(
+                type=long_entity.type,
+                offset=long_entity.offset,
+                length=long_entity.length,
+                url=long_entity.url,
+                user=long_entity.user,
+                language=long_entity.language,
             )
 
     return output_formatted_text
@@ -425,15 +421,11 @@ class PostCaptions:
                     search_caption, f"@{caption_mention}"
                 ):
                     if mention_occurrence not in mention_occurrences:
-                        formatted_text.entities.append(
-                            MessageEntity(
-                                type=MESSAGEENTITY_TEXT_LINK,
-                                offset=utf16len(
-                                    formatted_text.text[0:mention_occurrence]
-                                ),
-                                length=utf16len(f"@{caption_mention}"),
-                                url=f"https://instagram.com/{caption_mention}/",
-                            )
+                        formatted_text.add_entity(
+                            type=MESSAGEENTITY_TEXT_LINK,
+                            offset=utf16len(formatted_text.text[0:mention_occurrence]),
+                            length=utf16len(f"@{caption_mention}"),
+                            url=f"https://instagram.com/{caption_mention}/",
                         )
                     mention_occurrences.add(mention_occurrence)
 
@@ -446,15 +438,11 @@ class PostCaptions:
                     search_caption, f"#{caption_hashtag}"
                 ):
                     if hashtag_occurrence not in hashtag_occurrences:
-                        formatted_text.entities.append(
-                            MessageEntity(
-                                type=MESSAGEENTITY_TEXT_LINK,
-                                offset=utf16len(
-                                    formatted_text.text[0:hashtag_occurrence]
-                                ),
-                                length=utf16len(f"#{caption_hashtag}"),
-                                url=f"https://instagram.com/explore/tags/{caption_hashtag}/",
-                            )
+                        formatted_text.add_entity(
+                            type=MESSAGEENTITY_TEXT_LINK,
+                            offset=utf16len(formatted_text.text[0:hashtag_occurrence]),
+                            length=utf16len(f"#{caption_hashtag}"),
+                            url=f"https://instagram.com/explore/tags/{caption_hashtag}/",
                         )
                     hashtag_occurrences.add(hashtag_occurrence)
 
@@ -518,15 +506,11 @@ class StoryItemCaptions:
                     search_caption, f"@{caption_mention}"
                 ):
                     if mention_occurrence not in mention_occurrences:
-                        formatted_text.entities.append(
-                            MessageEntity(
-                                type=MESSAGEENTITY_TEXT_LINK,
-                                offset=utf16len(
-                                    formatted_text.text[0:mention_occurrence]
-                                ),
-                                length=utf16len(f"@{caption_mention}"),
-                                url=f"https://instagram.com/{caption_mention}/",
-                            )
+                        formatted_text.add_entity(
+                            type=MESSAGEENTITY_TEXT_LINK,
+                            offset=utf16len(formatted_text.text[0:mention_occurrence]),
+                            length=utf16len(f"@{caption_mention}"),
+                            url=f"https://instagram.com/{caption_mention}/",
                         )
                     mention_occurrences.add(mention_occurrence)
 
@@ -539,15 +523,11 @@ class StoryItemCaptions:
                     search_caption, f"#{caption_hashtag}"
                 ):
                     if hashtag_occurrence not in hashtag_occurrences:
-                        formatted_text.entities.append(
-                            MessageEntity(
-                                type=MESSAGEENTITY_TEXT_LINK,
-                                offset=utf16len(
-                                    formatted_text.text[0:hashtag_occurrence]
-                                ),
-                                length=utf16len(f"#{caption_hashtag}"),
-                                url=f"https://instagram.com/explore/tags/{caption_hashtag}/",
-                            )
+                        formatted_text.add_entity(
+                            type=MESSAGEENTITY_TEXT_LINK,
+                            offset=utf16len(formatted_text.text[0:hashtag_occurrence]),
+                            length=utf16len(f"#{caption_hashtag}"),
+                            url=f"https://instagram.com/explore/tags/{caption_hashtag}/",
                         )
                     hashtag_occurrences.add(hashtag_occurrence)
 
@@ -649,15 +629,11 @@ class ProfileCaptions:
                     search_caption, f"@{caption_mention}"
                 ):
                     if mention_occurrence not in mention_occurrences:
-                        formatted_text.entities.append(
-                            MessageEntity(
-                                type=MESSAGEENTITY_TEXT_LINK,
-                                offset=utf16len(
-                                    formatted_text.text[0:mention_occurrence]
-                                ),
-                                length=utf16len(f"@{caption_mention}"),
-                                url=f"https://instagram.com/{caption_mention}/",
-                            )
+                        formatted_text.add_entity(
+                            type=MESSAGEENTITY_TEXT_LINK,
+                            offset=utf16len(formatted_text.text[0:mention_occurrence]),
+                            length=utf16len(f"@{caption_mention}"),
+                            url=f"https://instagram.com/{caption_mention}/",
                         )
                     mention_occurrences.add(mention_occurrence)
 
@@ -670,15 +646,11 @@ class ProfileCaptions:
                     search_caption, f"#{caption_hashtag}"
                 ):
                     if hashtag_occurrence not in hashtag_occurrences:
-                        formatted_text.entities.append(
-                            MessageEntity(
-                                type=MESSAGEENTITY_TEXT_LINK,
-                                offset=utf16len(
-                                    formatted_text.text[0:hashtag_occurrence]
-                                ),
-                                length=utf16len(f"#{caption_hashtag}"),
-                                url=f"https://instagram.com/explore/tags/{caption_hashtag}/",
-                            )
+                        formatted_text.add_entity(
+                            type=MESSAGEENTITY_TEXT_LINK,
+                            offset=utf16len(formatted_text.text[0:hashtag_occurrence]),
+                            length=utf16len(f"#{caption_hashtag}"),
+                            url=f"https://instagram.com/explore/tags/{caption_hashtag}/",
                         )
                     hashtag_occurrences.add(hashtag_occurrence)
 
