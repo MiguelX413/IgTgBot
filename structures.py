@@ -205,11 +205,15 @@ class FormattedText:
     text: str
     _entities: List[MessageEntity]
 
-    def __init__(
-        self, text: str = "", entities: Optional[List[MessageEntity]] = None
-    ) -> None:
+    def __init__(self, text: str = "", entities=None) -> None:
+        if entities is None:
+            entities = []
+
         self.text = text
-        self._entities = entities or []
+        for entity in entities:
+            if (entity.offset + entity.length) > utf16len(self.text):
+                raise InvalidMessageEntity
+        self._entities = entities
 
     @property
     def entities(self) -> List[MessageEntity]:
