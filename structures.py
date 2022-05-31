@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 from typing import Dict, List, NamedTuple, Optional, Set
 from unicodedata import normalize
 
@@ -263,7 +265,7 @@ class FormattedText:
             )
         self.text += text
 
-    def __add__(self, other: "FormattedText") -> "FormattedText":
+    def __add__(self, other: FormattedText) -> FormattedText:
         self_utf16len = utf16len(self.text)
         formatted_text = FormattedText(f"{self.text}{other.text}", self.entities)
 
