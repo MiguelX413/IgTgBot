@@ -11,6 +11,8 @@ from telegram.constants import (
     MESSAGEENTITY_TEXT_LINK,
 )
 
+from exceptions import InvalidMessageEntity
+
 emojis: Dict[str, str] = {
     "person": "👤",
     "location": "📍",
@@ -242,7 +244,10 @@ class FormattedText:
         url: Optional[str] = None,
         user: Optional[User] = None,
         language: Optional[str] = None,
-    ):
+    ) -> None:
+        if (offset + length) > utf16len(self.text):
+            raise InvalidMessageEntity
+
         self._entities.append(
             MessageEntity(
                 type=type,
