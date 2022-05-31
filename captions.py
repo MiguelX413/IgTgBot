@@ -202,7 +202,8 @@ class StoryItemCaptions:
             url=f"https://instagram.com/{self._story_item.owner_username}/",
         )
         formatted_text.append(
-            f" ({self._story_item.owner_id}): https://instagram.com/stories/{self._story_item.owner_username}/{self._story_item.mediaid}/"
+            f" ({self._story_item.owner_id}): https://instagram.com"
+            f"/stories/{self._story_item.owner_username}/{self._story_item.mediaid}/"
         )
         formatted_text.append("\n")
 
