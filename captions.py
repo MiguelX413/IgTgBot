@@ -7,14 +7,8 @@ from telegram.constants import (
     MESSAGEENTITY_TEXT_LINK,
 )
 
-from structures import (
-    FormattedText,
-    PatchedPost,
-    PatchedProfile,
-    PatchedStoryItem,
-    shorten_formatted_text,
-    utf16len,
-)
+from instaloader_patches import PatchedPost, PatchedProfile, PatchedStoryItem
+from structures import FormattedText, shorten_formatted_text, utf16len
 
 emojis: Dict[str, str] = {
     "person": "👤",

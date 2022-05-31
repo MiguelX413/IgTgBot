@@ -22,7 +22,7 @@ from telegram.constants import MAX_CAPTION_LENGTH
 from telegram.ext import CallbackContext
 
 from captions import PostCaptions, ProfileCaptions, StoryItemCaptions
-from structures import PatchedPost, PatchedProfile, PatchedStoryItem
+from instaloader_patches import PatchedPost, PatchedProfile, PatchedStoryItem
 
 
 class InstagramHandler:
