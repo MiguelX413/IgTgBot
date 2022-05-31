@@ -284,6 +284,12 @@ class FormattedText:
     def __len__(self) -> int:
         return len(self.text)
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(text={self.text!r}, entities={self._entities!r})"
+
+    def __str__(self) -> str:
+        return self.text
+
 
 def shorten_formatted_text(
     formatted_text: FormattedText, length: int = MAX_CAPTION_LENGTH
