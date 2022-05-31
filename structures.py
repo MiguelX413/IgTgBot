@@ -215,27 +215,6 @@ class FormattedText:
     def entities(self) -> List[MessageEntity]:
         return list(self._entities)
 
-    def append(
-        self,
-        text: str,
-        type: Optional[str] = None,  # pylint: disable=W0622
-        url: Optional[str] = None,
-        user: Optional[User] = None,
-        language: Optional[str] = None,
-    ) -> None:
-        if type is not None:
-            self._entities.append(
-                MessageEntity(
-                    type=type,
-                    offset=utf16len(self.text),
-                    length=utf16len(text),
-                    url=url,
-                    user=user,
-                    language=language,
-                )
-            )
-        self.text += text
-
     def add_entity(
         self,
         type: str,  # pylint: disable=W0622
@@ -258,6 +237,27 @@ class FormattedText:
                 language=language,
             )
         )
+
+    def append(
+        self,
+        text: str,
+        type: Optional[str] = None,  # pylint: disable=W0622
+        url: Optional[str] = None,
+        user: Optional[User] = None,
+        language: Optional[str] = None,
+    ) -> None:
+        if type is not None:
+            self._entities.append(
+                MessageEntity(
+                    type=type,
+                    offset=utf16len(self.text),
+                    length=utf16len(text),
+                    url=url,
+                    user=user,
+                    language=language,
+                )
+            )
+        self.text += text
 
     def __len__(self) -> int:
         return len(self.text)
