@@ -201,13 +201,17 @@ class PatchedProfile(Profile):
 
 class FormattedText:
     text: str
-    entities: List[MessageEntity]
+    _entities: List[MessageEntity]
 
     def __init__(
         self, text: str = "", entities: Optional[List[MessageEntity]] = None
     ) -> None:
         self.text = text
-        self.entities = entities or []
+        self._entities = entities or []
+
+    @property
+    def entities(self) -> List[MessageEntity]:
+        return list(self._entities)
 
     def append(
         self,
@@ -218,7 +222,7 @@ class FormattedText:
         language: Optional[str] = None,
     ) -> None:
         if type is not None:
-            self.entities.append(
+            self._entities.append(
                 MessageEntity(
                     type=type,
                     offset=utf16len(self.text),
@@ -239,7 +243,7 @@ class FormattedText:
         user: Optional[User] = None,
         language: Optional[str] = None,
     ):
-        self.entities.append(
+        self._entities.append(
             MessageEntity(
                 type=type,
                 offset=offset,
