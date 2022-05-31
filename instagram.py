@@ -21,14 +21,8 @@ from telegram import (
 from telegram.constants import MAX_CAPTION_LENGTH
 from telegram.ext import CallbackContext
 
-from structures import (
-    PatchedPost,
-    PatchedProfile,
-    PatchedStoryItem,
-    PostCaptions,
-    ProfileCaptions,
-    StoryItemCaptions,
-)
+from captions import PostCaptions, ProfileCaptions, StoryItemCaptions
+from structures import PatchedPost, PatchedProfile, PatchedStoryItem
 
 
 class InstagramHandler:
