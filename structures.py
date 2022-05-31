@@ -230,6 +230,26 @@ class FormattedText:
             )
         self.text += text
 
+    def add_entity(
+        self,
+        type: str,  # pylint: disable=W0622
+        offset: int,
+        length: int,
+        url: Optional[str] = None,
+        user: Optional[User] = None,
+        language: Optional[str] = None,
+    ):
+        self.entities.append(
+            MessageEntity(
+                type=type,
+                offset=offset,
+                length=length,
+                url=url,
+                user=user,
+                language=language,
+            )
+        )
+
     def __len__(self) -> int:
         return len(self.text)
 
