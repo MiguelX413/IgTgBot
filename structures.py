@@ -263,6 +263,22 @@ class FormattedText:
             )
         self.text += text
 
+    def __add__(self, other: "FormattedText") -> "FormattedText":
+        self_utf16len = utf16len(self.text)
+        formatted_text = FormattedText(f"{self.text}{other.text}", self.entities)
+
+        for entity in other.entities:
+            formatted_text.add_entity(
+                type=entity.type,
+                offset=self_utf16len + entity.offset,
+                length=self_utf16len + entity.length,
+                url=entity.url,
+                user=entity.user,
+                language=entity.language,
+            )
+
+        return formatted_text
+
     def __len__(self) -> int:
         return len(self.text)
 
