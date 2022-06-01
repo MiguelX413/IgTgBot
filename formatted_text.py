@@ -95,21 +95,25 @@ class FormattedText:
 
         return self
 
-    def __add__(self, other: FormattedText) -> FormattedText:
-        self_utf16len = utf16len(self.text)
-        formatted_text = FormattedText(f"{self.text}{other.text}", self.entities)
+    def __add__(self, other: Union[FormattedText, str]) -> FormattedText:
+        if isinstance(other, str):
+            return FormattedText(f"{self.text}{other}", self._entities)
 
-        for entity in other._entities:
-            formatted_text.add_entity(
-                type=entity.type,
-                offset=self_utf16len + entity.offset,
-                length=self_utf16len + entity.length,
-                url=entity.url,
-                user=entity.user,
-                language=entity.language,
-            )
+        elif isinstance(other, FormattedText):
+            self_utf16len = utf16len(self.text)
+            formatted_text = FormattedText(f"{self.text}{other.text}", self._entities)
+            for entity in other._entities:
+                formatted_text.add_entity(
+                    type=entity.type,
+                    offset=self_utf16len + entity.offset,
+                    length=self_utf16len + entity.length,
+                    url=entity.url,
+                    user=entity.user,
+                    language=entity.language,
+                )
+            return formatted_text
 
-        return formatted_text
+        raise TypeError("Expected other to be type str or FormattedText")
 
     def __len__(self) -> int:
         return len(self.text)
