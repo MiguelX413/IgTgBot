@@ -14,7 +14,9 @@ class FormattedText:
     text: str
     _entities: List[MessageEntity]
 
-    def __init__(self, text: str = "", entities=None) -> None:
+    def __init__(
+        self, text: str = "", entities: Optional[List[MessageEntity]] = None
+    ) -> None:
         if entities is None:
             entities = []
 
