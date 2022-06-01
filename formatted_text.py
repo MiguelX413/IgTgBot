@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from telegram import MessageEntity, User
 from telegram.constants import MAX_CAPTION_LENGTH
@@ -72,11 +72,34 @@ class FormattedText:
             )
         self.text += text
 
+    def append_text(self, text: Union[FormattedText, str]) -> FormattedText:
+        """Append strings or instances of FormattedText"""
+        if isinstance(text, str):
+            self.text += text
+
+        elif isinstance(text, FormattedText):
+            self_utf16len = utf16len(self.text)
+            self.text += text.text
+            for entity in text._entities:
+                self.add_entity(
+                    type=entity.type,
+                    offset=self_utf16len + entity.offset,
+                    length=self_utf16len + entity.length,
+                    url=entity.url,
+                    user=entity.user,
+                    language=entity.language,
+                )
+
+        else:
+            raise TypeError("Expected text to be type str or FormattedText")
+
+        return self
+
     def __add__(self, other: FormattedText) -> FormattedText:
         self_utf16len = utf16len(self.text)
         formatted_text = FormattedText(f"{self.text}{other.text}", self.entities)
 
-        for entity in other.entities:
+        for entity in other._entities:
             formatted_text.add_entity(
                 type=entity.type,
                 offset=self_utf16len + entity.offset,
