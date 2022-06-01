@@ -9,7 +9,7 @@ from telegram.constants import (
 
 from formatted_text import FormattedText, shorten_formatted_text
 from instaloader_patches import PatchedPost, PatchedProfile, PatchedStoryItem
-from structures import utf16len
+from structures import find_occurrences, utf16len
 
 emojis: Dict[str, str] = {
     "person": "👤",
@@ -19,16 +19,6 @@ emojis: Dict[str, str] = {
     "comments": "💬",
     "calendar": "📅",
 }
-
-
-def find_occurrences(string: str, substring: str) -> Set[int]:
-    """Returns the multiple occurrences of a substring in a string"""
-    offsets: Set[int] = set()
-    pos: int = string.find(substring)
-    while pos != -1:
-        offsets.add(pos)
-        pos = string.find(substring, pos + 1)
-    return offsets
 
 
 class PostCaptions:
