@@ -22,7 +22,7 @@ def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text("Hi, lmao", quote=True)
 
 
-def main(token: str, ig_user: Optional[str], whitelist: Optional[Set[int]]) -> None:
+def bot(token: str, ig_user: Optional[str], whitelist: Optional[Set[int]]) -> None:
     with InstagramHandler(ig_user, whitelist) as instagram_handler, ErrorHandler(
         whitelist
     ) as error_handler:
@@ -47,7 +47,7 @@ def main(token: str, ig_user: Optional[str], whitelist: Optional[Set[int]]) -> N
         updater.idle()
 
 
-if __name__ == "__main__":
+def main() -> None:
     import argparse
 
     parser: argparse.ArgumentParser = argparse.ArgumentParser(description="Runs TG bot")
@@ -146,8 +146,12 @@ if __name__ == "__main__":
         user_whitelist = set(args.whitelist)
         logging.info("Authorized users: %s", user_whitelist)
 
-    main(
+    bot(
         os.environ.get("TG_TOKEN") if "TG_TOKEN" in os.environ else args.token,
         args.ig_user,
         user_whitelist,
     )
+
+
+if __name__ == "__main__":
+    main()
