@@ -22,10 +22,15 @@ def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text("Hi, lmao", quote=True)
 
 
-def bot(token: str, ig_user: Optional[str], whitelist: Optional[Set[int]]) -> None:
-    with InstagramHandler(ig_user, whitelist) as instagram_handler, ErrorHandler(
-        whitelist
-    ) as error_handler:
+def bot(
+    token: str,
+    ig_user: Optional[str],
+    whitelist: Optional[Set[int]],
+    instaloader_iphone_support: bool = True,
+) -> None:
+    with InstagramHandler(
+        ig_user, whitelist, iphone_support=instaloader_iphone_support
+    ) as instagram_handler, ErrorHandler(whitelist) as error_handler:
         updater = Updater(token, use_context=True)
         dispatcher: Dispatcher = updater.dispatcher
 
@@ -97,6 +102,12 @@ def main() -> None:
         help="Disables rich output",
     )
     parser.add_argument(
+        "--no-iphone",
+        action="store_false",
+        dest="iphone",
+        help="Passes --no-iphone to instaloader",
+    )
+    parser.add_argument(
         "--log-file",
         action="store_true",
         dest="logfile",
@@ -150,6 +161,7 @@ def main() -> None:
         os.environ.get("TG_TOKEN") if "TG_TOKEN" in os.environ else args.token,
         args.ig_user,
         user_whitelist,
+        instaloader_iphone_support=args.iphone,
     )
 
 

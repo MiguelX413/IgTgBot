@@ -29,10 +29,15 @@ class InstagramHandler:
     instaloader: Instaloader
     whitelist: Optional[Set[int]]
 
-    def __init__(self, ig_user: Optional[str], whitelist: Optional[Set[int]]) -> None:
+    def __init__(
+        self,
+        ig_user: Optional[str],
+        whitelist: Optional[Set[int]],
+        iphone_support: bool = True,
+    ) -> None:
         self.whitelist = whitelist
 
-        self.instaloader = Instaloader()
+        self.instaloader = Instaloader(iphone_support=iphone_support)
         if ig_user is not None:
             try:
                 self.instaloader.load_session_from_file(username=ig_user)
