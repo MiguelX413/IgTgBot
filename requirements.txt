@@ -1,2 +1,2 @@
-instaloader~=4.9.0
-python-telegram-bot[json]~=13.13
+instaloader~=4.9.5
+python-telegram-bot[json]~=13.14
