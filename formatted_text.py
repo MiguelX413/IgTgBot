@@ -120,15 +120,15 @@ class FormattedText:
         return self
 
     def get_entities_at_offset(self, offset: int) -> List[MessageEntity]:
-        entities: List[MessageEntity] = []
-        for entity in self._entities:
+        return [
+            entity
+            for entity in self._entities
             if (
                 entity.offset
                 <= utf16len(self.text[:offset])
                 < (entity.offset + entity.length)
-            ):
-                entities.append(entity)
-        return entities
+            )
+        ]
 
     def __add__(self, other: Union[FormattedText, str]) -> FormattedText:
         if isinstance(other, str):
