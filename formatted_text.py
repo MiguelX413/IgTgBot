@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, overload
 
 from telegram import MessageEntity, User
 from telegram.constants import MessageLimit
@@ -56,6 +56,22 @@ class FormattedText:
                 custom_emoji_id=custom_emoji_id,
             )
         )
+
+    @overload
+    def append(self, text: str) -> None:
+        ...
+
+    @overload
+    def append(
+        self,
+        text: str,
+        type: str,  # pylint: disable=redefined-builtin
+        url: Optional[str] = None,
+        user: Optional[User] = None,
+        language: Optional[str] = None,
+        custom_emoji_id: Optional[str] = None,
+    ):
+        ...
 
     def append(
         self,
