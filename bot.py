@@ -121,17 +121,15 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    do_rich = True
+    RichHandler = None  # pylint: disable=invalid-name
     if args.rich:
         try:
             from rich.logging import RichHandler
         except ImportError:
-            do_rich = False
-    else:
-        do_rich = False
+            RichHandler = None  # pylint: disable=invalid-name
 
     logging_handlers: List[logging.Handler] = []
-    if do_rich:
+    if RichHandler is not None:
         logging_handlers.append(RichHandler(rich_tracebacks=True))
     else:
         logging_handlers.append(logging.StreamHandler())
@@ -146,7 +144,7 @@ def main() -> None:
     )
 
     logging.info(args)
-    logging.info("do_rich: %s", do_rich)
+    logging.info("do_rich: %s", RichHandler is not None)
     if "TG_TOKEN" in os.environ:
         logging.info("TG_TOKEN: %s", os.environ.get("TG_TOKEN"))
 
