@@ -1,25 +1,24 @@
 #!/usr/bin/env python3
 import logging
 import os
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Type
 
 from telegram import Update
 from telegram.ext import (
+    Application,
     CallbackContext,
     CommandHandler,
-    Dispatcher,
     InlineQueryHandler,
-    Updater,
 )
 
 from error_handler import ErrorHandler
 from instagram import InstagramHandler
 
 
-def start(update: Update, context: CallbackContext) -> None:
+async def start(update: Update, context: CallbackContext) -> None:
     if update.message is None:
         raise ValueError("Expected update.message to not be None.")
-    update.message.reply_text("Hi, lmao", quote=True)
+    await update.message.reply_text("Hi, lmao", quote=True)
 
 
 def bot(
@@ -31,25 +30,23 @@ def bot(
     with InstagramHandler(
         ig_user, whitelist, iphone_support=instaloader_iphone_support
     ) as instagram_handler, ErrorHandler(whitelist) as error_handler:
-        updater = Updater(token, use_context=True)
-        dispatcher: Dispatcher = updater.dispatcher
+        application = Application.builder().token(token).build()
 
-        dispatcher.add_error_handler(error_handler.error_handler)
+        application.add_error_handler(error_handler.error_handler)
 
-        dispatcher.add_handler(CommandHandler("start", start))
-        dispatcher.add_handler(CommandHandler("p", instagram_handler.posts))
-        dispatcher.add_handler(
+        application.add_handler(CommandHandler("start", start))
+        application.add_handler(CommandHandler("p", instagram_handler.posts))
+        application.add_handler(
             CommandHandler("storyitem", instagram_handler.story_item)
         )
-        dispatcher.add_handler(CommandHandler("profile", instagram_handler.profile))
-        dispatcher.add_handler(
+        application.add_handler(CommandHandler("profile", instagram_handler.profile))
+        application.add_handler(
             CommandHandler("profileid", instagram_handler.profile_id)
         )
 
-        dispatcher.add_handler(InlineQueryHandler(instagram_handler.inlinequery))
+        application.add_handler(InlineQueryHandler(instagram_handler.inlinequery))
 
-        updater.start_polling()
-        updater.idle()
+        application.run_polling()
 
 
 def main() -> None:
@@ -121,16 +118,16 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    RichHandler = None  # pylint: disable=invalid-name
+    logging_handlers: List[logging.Handler] = []
+    do_rich = False
     if args.rich:
         try:
             from rich.logging import RichHandler
         except ImportError:
-            RichHandler = None  # pylint: disable=invalid-name
-
-    logging_handlers: List[logging.Handler] = []
-    if RichHandler is not None:
-        logging_handlers.append(RichHandler(rich_tracebacks=True))
+            logging_handlers.append(logging.StreamHandler())
+        else:
+            logging_handlers.append(RichHandler(rich_tracebacks=True))
+            do_rich = True
     else:
         logging_handlers.append(logging.StreamHandler())
 
@@ -144,7 +141,7 @@ def main() -> None:
     )
 
     logging.info(args)
-    logging.info("do_rich: %s", RichHandler is not None)
+    logging.info("do_rich: %s", do_rich)
     if "TG_TOKEN" in os.environ:
         logging.info("TG_TOKEN: %s", os.environ.get("TG_TOKEN"))
 

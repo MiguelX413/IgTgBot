@@ -18,11 +18,13 @@ from telegram import (
     Message,
     Update,
 )
-from telegram.constants import MAX_CAPTION_LENGTH
+from telegram.constants import MessageLimit
 from telegram.ext import CallbackContext
 
 from captions import PostCaptions, ProfileCaptions, StoryItemCaptions
 from instaloader_patches import PatchedPost, PatchedProfile, PatchedStoryItem
+
+MAX_CAPTION_LENGTH = MessageLimit.CAPTION_LENGTH
 
 
 class InstagramHandler:
@@ -59,7 +61,7 @@ class InstagramHandler:
     ) -> None:
         return self.close()
 
-    def inlinequery(self, update: Update, context: CallbackContext) -> None:
+    async def inlinequery(self, update: Update, context: CallbackContext) -> None:
         """Produces results for Inline Queries"""
         logging.info(update.inline_query)
 
@@ -73,7 +75,7 @@ class InstagramHandler:
         if (self.whitelist is not None) and (
             update.inline_query.from_user.id not in self.whitelist
         ):
-            update.inline_query.answer(
+            await update.inline_query.answer(
                 [
                     InlineQueryResultArticle(
                         id=str(uuid4()),
@@ -172,9 +174,9 @@ class InstagramHandler:
                     thumb_url=post.url,
                 )
             )
-        update.inline_query.answer(results, cache_time=21600, is_personal=False)
+        await update.inline_query.answer(results, cache_time=21600, is_personal=False)
 
-    def posts(self, update: Update, context: CallbackContext) -> None:
+    async def posts(self, update: Update, context: CallbackContext) -> None:
         """Returns posts"""
         logging.info(str(update.message))
 
@@ -185,11 +187,11 @@ class InstagramHandler:
             (update.message.from_user is not None)
             and (update.message.from_user.id not in self.whitelist)
         ):
-            update.message.reply_text("Unauthorized user", quote=True)
+            await update.message.reply_text("Unauthorized user", quote=True)
             return
 
         if (context.args is None) or (len(context.args) < 1):
-            update.message.reply_text(
+            await update.message.reply_text(
                 "Please run the command with a shortcode.", quote=True
             )
             return
@@ -198,7 +200,7 @@ class InstagramHandler:
         is_ig_post: bool = True
 
         if not is_ig_post:
-            update.message.reply_text("Not an Instagram post", quote=True)
+            await update.message.reply_text("Not an Instagram post", quote=True)
             return
         post: PatchedPost = PatchedPost.from_shortcode(
             self.instaloader.context, shortcode
@@ -235,16 +237,18 @@ class InstagramHandler:
                     )
             for input_medium in media_group:
                 logging.info(input_medium)
-            media_reply: Optional[Message] = update.message.reply_media_group(
-                media=media_group,
-                quote=True,
+            media_reply: Optional[Message] = (
+                await update.message.reply_media_group(
+                    media=media_group,
+                    quote=True,
+                )
             )[-1]
 
         else:
             post_captions = PostCaptions(post)
             short = post_captions.short_caption()
             if (post.typename == "GraphVideo") and (post.video_url is not None):
-                media_reply = update.message.reply_video(
+                media_reply = await update.message.reply_video(
                     video=post.video_url,
                     quote=True,
                     caption=short.text,
@@ -254,11 +258,11 @@ class InstagramHandler:
             else:
                 if post.typename != "GraphImage":
                     logging.info("Post type irregular: %s", post.typename)
-                    update.message.reply_text(
+                    await update.message.reply_text(
                         f"Invalid type: {post.typename}, will try to send as image.",
                         quote=True,
                     )
-                media_reply = update.message.reply_photo(
+                media_reply = await update.message.reply_photo(
                     photo=post.url,
                     quote=True,
                     caption=short.text,
@@ -273,9 +277,9 @@ class InstagramHandler:
                 and (len(post_captions.long_caption(0)) > MAX_CAPTION_LENGTH)
             )
         ):
-            media_reply.reply_text(long.text, entities=long.entities, quote=True)
+            await media_reply.reply_text(long.text, entities=long.entities, quote=True)
 
-    def story_item(self, update: Update, context: CallbackContext) -> None:
+    async def story_item(self, update: Update, context: CallbackContext) -> None:
         """Returns story items"""
         logging.info(str(update.message))
 
@@ -287,11 +291,11 @@ class InstagramHandler:
             and (update.message.from_user is not None)
             and (update.message.from_user.id not in self.whitelist)
         ):
-            update.message.reply_text("Unauthorized user", quote=True)
+            await update.message.reply_text("Unauthorized user", quote=True)
             return
 
         if (context.args is None) or (len(context.args) < 1):
-            update.message.reply_text(
+            await update.message.reply_text(
                 "Please run the command with a storyitem ID.", quote=True
             )
             return
@@ -299,12 +303,12 @@ class InstagramHandler:
         try:
             media_id: int = int(context.args[0])
         except ValueError:
-            update.message.reply_text("Invalid storyitem ID.", quote=True)
+            await update.message.reply_text("Invalid storyitem ID.", quote=True)
             return
 
         is_ig_story_item: bool = True
         if not is_ig_story_item:
-            update.message.reply_text("Not an Instagram story item", quote=True)
+            await update.message.reply_text("Not an Instagram story item", quote=True)
             return
         story_item: PatchedStoryItem = PatchedStoryItem.from_mediaid(
             self.instaloader.context, media_id
@@ -314,7 +318,7 @@ class InstagramHandler:
         story_item_captions = StoryItemCaptions(story_item)
         short = story_item_captions.short_caption()
         if story_item.is_video and (story_item.video_url is not None):
-            first_reply = update.message.reply_video(
+            first_reply = await update.message.reply_video(
                 video=story_item.video_url,
                 quote=True,
                 caption=short.text,
@@ -322,7 +326,7 @@ class InstagramHandler:
             )
 
         else:
-            first_reply = update.message.reply_photo(
+            first_reply = await update.message.reply_photo(
                 photo=story_item.url,
                 quote=True,
                 caption=short.text,
@@ -330,9 +334,9 @@ class InstagramHandler:
             )
         long = story_item_captions.long_caption()
         if len(long.text) > MAX_CAPTION_LENGTH:
-            first_reply.reply_text(long.text, entities=long.entities, quote=True)
+            await first_reply.reply_text(long.text, entities=long.entities, quote=True)
 
-    def profile(self, update: Update, context: CallbackContext) -> None:
+    async def profile(self, update: Update, context: CallbackContext) -> None:
         """Returns Instagram profiles"""
         logging.info(str(update.message))
 
@@ -344,17 +348,17 @@ class InstagramHandler:
             and (update.message.from_user is not None)
             and (update.message.from_user.id not in self.whitelist)
         ):
-            update.message.reply_text("Unauthorized user", quote=True)
+            await update.message.reply_text("Unauthorized user", quote=True)
             return
         if (context.args is None) or (len(context.args) < 1):
-            update.message.reply_text(
+            await update.message.reply_text(
                 "Please run the command with a profile username.", quote=True
             )
             return
         profile_username: str = context.args[0]
         is_ig_profile: bool = True
         if not is_ig_profile:
-            update.message.reply_text("Not an Instagram profile", quote=True)
+            await update.message.reply_text("Not an Instagram profile", quote=True)
             return
         profile: PatchedProfile = PatchedProfile.from_username(
             self.instaloader.context, profile_username
@@ -363,7 +367,7 @@ class InstagramHandler:
 
         profile_captions = ProfileCaptions(profile)
         short = profile_captions.short_caption()
-        first_reply = update.message.reply_photo(
+        first_reply = await update.message.reply_photo(
             photo=profile.profile_pic_url,
             quote=True,
             caption=short.text,
@@ -371,9 +375,9 @@ class InstagramHandler:
         )
         long = profile_captions.long_caption()
         if len(long.text) > MAX_CAPTION_LENGTH:
-            first_reply.reply_text(long.text, entities=long.entities, quote=True)
+            await first_reply.reply_text(long.text, entities=long.entities, quote=True)
 
-    def profile_id(self, update: Update, context: CallbackContext) -> None:
+    async def profile_id(self, update: Update, context: CallbackContext) -> None:
         """Returns Instagram profiles"""
         logging.info(str(update.message))
 
@@ -385,10 +389,10 @@ class InstagramHandler:
             and (update.message.from_user is not None)
             and (update.message.from_user.id not in self.whitelist)
         ):
-            update.message.reply_text("Unauthorized user", quote=True)
+            await update.message.reply_text("Unauthorized user", quote=True)
             return
         if (context.args is None) or (len(context.args) < 1):
-            update.message.reply_text(
+            await update.message.reply_text(
                 "Please run the command with a profile ID.", quote=True
             )
             return
@@ -396,12 +400,12 @@ class InstagramHandler:
         try:
             profile_id: int = int(context.args[0])
         except ValueError:
-            update.message.reply_text("Invalid profile ID.", quote=True)
+            await update.message.reply_text("Invalid profile ID.", quote=True)
             return
 
         is_ig_profile: bool = True
         if not is_ig_profile:
-            update.message.reply_text("Not an Instagram profile", quote=True)
+            await update.message.reply_text("Not an Instagram profile", quote=True)
             return
 
         profile: PatchedProfile = PatchedProfile.from_id(
@@ -411,7 +415,7 @@ class InstagramHandler:
 
         profile_captions = ProfileCaptions(profile)
         short = profile_captions.short_caption()
-        first_reply = update.message.reply_photo(
+        first_reply = await update.message.reply_photo(
             photo=profile.profile_pic_url,
             quote=True,
             caption=short.text,
@@ -419,4 +423,4 @@ class InstagramHandler:
         )
         long = profile_captions.long_caption()
         if len(long.text) > MAX_CAPTION_LENGTH:
-            first_reply.reply_text(long.text, entities=long.entities, quote=True)
+            await first_reply.reply_text(long.text, entities=long.entities, quote=True)

@@ -27,7 +27,7 @@ class ErrorHandler:
     ) -> None:
         return self.close()
 
-    def error_handler(self, update: object, context: CallbackContext) -> None:
+    async def error_handler(self, update: object, context: CallbackContext) -> None:
         """Handles errors for the bot"""
         if context.error is None:
             raise ValueError("Expected context.error to have value.")
@@ -44,13 +44,13 @@ class ErrorHandler:
                     and (update.message.from_user.id in self.whitelist)
                 )
             ):
-                update.message.reply_text(exception_sting, quote=True)
+                await update.message.reply_text(exception_sting, quote=True)
 
             if (update.inline_query is not None) and (
                 (self.whitelist is None)
                 or (update.inline_query.from_user.id in self.whitelist)
             ):
-                update.inline_query.answer(
+                await update.inline_query.answer(
                     [
                         InlineQueryResultArticle(
                             id=str(uuid4()),

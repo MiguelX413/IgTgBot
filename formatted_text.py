@@ -4,10 +4,12 @@ from __future__ import annotations
 from typing import List, Optional, Union
 
 from telegram import MessageEntity, User
-from telegram.constants import MAX_CAPTION_LENGTH
+from telegram.constants import MessageLimit
 
 from exceptions import InvalidMessageEntity
 from structures import utf16len
+
+MAX_CAPTION_LENGTH = MessageLimit.CAPTION_LENGTH
 
 
 class FormattedText:
@@ -32,12 +34,13 @@ class FormattedText:
 
     def add_entity(
         self,
-        type: str,  # pylint: disable=W0622
+        type: str,  # pylint: disable=redefined-builtin
         offset: int,
         length: int,
         url: Optional[str] = None,
         user: Optional[User] = None,
         language: Optional[str] = None,
+        custom_emoji_id: Optional[str] = None,
     ) -> None:
         if (offset + length) > utf16len(self.text):
             raise InvalidMessageEntity
@@ -50,16 +53,18 @@ class FormattedText:
                 url=url,
                 user=user,
                 language=language,
+                custom_emoji_id=custom_emoji_id,
             )
         )
 
     def append(
         self,
         text: str,
-        type: Optional[str] = None,  # pylint: disable=W0622
+        type: Optional[str] = None,  # pylint: disable=redefined-builtin
         url: Optional[str] = None,
         user: Optional[User] = None,
         language: Optional[str] = None,
+        custom_emoji_id: Optional[str] = None,
     ) -> None:
         if type is not None:
             self._entities.append(
@@ -70,6 +75,7 @@ class FormattedText:
                     url=url,
                     user=user,
                     language=language,
+                    custom_emoji_id=custom_emoji_id,
                 )
             )
         self.text += text

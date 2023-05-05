@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 from typing import Dict, Optional, Set
 
-from telegram.constants import (
-    MESSAGEENTITY_BOLD,
-    MESSAGEENTITY_ITALIC,
-    MESSAGEENTITY_TEXT_LINK,
-)
+from telegram.constants import MessageEntityType
 
 from formatted_text import FormattedText, shorten_formatted_text
 from instaloader_patches import PatchedPost, PatchedProfile, PatchedStoryItem
@@ -44,13 +40,13 @@ class PostCaptions:
                 media_url = node.video_url
             else:
                 media_url = node.display_url
-        formatted_text.append("Media", type=MESSAGEENTITY_TEXT_LINK, url=media_url)
+        formatted_text.append("Media", type=MessageEntityType.TEXT_LINK, url=media_url)
         formatted_text.append("\n")
 
         # Posting account, post url, and counter
         formatted_text.append(
             f"@{self._post.owner_username}",
-            type=MESSAGEENTITY_TEXT_LINK,
+            type=MessageEntityType.TEXT_LINK,
             url=f"https://instagram.com/{self._post.owner_username}/",
         )
         formatted_text.append(
@@ -71,7 +67,7 @@ class PostCaptions:
                 formatted_text.append(" ")
                 formatted_text.append(
                     f"@{sponsor_user.username}",
-                    type=MESSAGEENTITY_TEXT_LINK,
+                    type=MessageEntityType.TEXT_LINK,
                     url=f"https://instagram.com/{sponsor_user.username}/",
                 )
                 formatted_text.append(f" ({sponsor_user.userid})")
@@ -85,7 +81,7 @@ class PostCaptions:
                 formatted_text.append(" ")
                 formatted_text.append(
                     f"@{tagged_user.username}",
-                    type=MESSAGEENTITY_TEXT_LINK,
+                    type=MessageEntityType.TEXT_LINK,
                     url=f"https://instagram.com/{tagged_user.username}/",
                 )
                 formatted_text.append(f" ({tagged_user.id})")
@@ -96,7 +92,7 @@ class PostCaptions:
             formatted_text.append(emojis["location"])
             formatted_text.append(
                 f"{self._post.location.name}",
-                type=MESSAGEENTITY_TEXT_LINK,
+                type=MessageEntityType.TEXT_LINK,
                 url=f"https://instagram.com/explore/locations/{self._post.location.id}/",
             )
             formatted_text.append("\n")
@@ -107,7 +103,7 @@ class PostCaptions:
         formatted_text.append(emojis["heart"])
         formatted_text.append(
             f"{self._post.likes}",
-            type=MESSAGEENTITY_TEXT_LINK,
+            type=MessageEntityType.TEXT_LINK,
             url=f"https://instagram.com/p/{self._post.shortcode}/liked_by/",
         )
         formatted_text.append(f" {emojis['comments']}{self._post.comments}\n")
@@ -137,7 +133,7 @@ class PostCaptions:
                 ):
                     if mention_occurrence not in mention_occurrences:
                         formatted_text.add_entity(
-                            type=MESSAGEENTITY_TEXT_LINK,
+                            type=MessageEntityType.TEXT_LINK,
                             offset=utf16len(formatted_text.text[0:mention_occurrence]),
                             length=utf16len(f"@{caption_mention}"),
                             url=f"https://instagram.com/{caption_mention}/",
@@ -154,7 +150,7 @@ class PostCaptions:
                 ):
                     if hashtag_occurrence not in hashtag_occurrences:
                         formatted_text.add_entity(
-                            type=MESSAGEENTITY_TEXT_LINK,
+                            type=MessageEntityType.TEXT_LINK,
                             offset=utf16len(formatted_text.text[0:hashtag_occurrence]),
                             length=utf16len(f"#{caption_hashtag}"),
                             url=f"https://instagram.com/explore/tags/{caption_hashtag}/",
@@ -183,13 +179,13 @@ class StoryItemCaptions:
             media_url = self._story_item.video_url
         else:
             media_url = self._story_item.url
-        formatted_text.append("Media", type=MESSAGEENTITY_TEXT_LINK, url=media_url)
+        formatted_text.append("Media", type=MessageEntityType.TEXT_LINK, url=media_url)
         formatted_text.append("\n")
 
         # Posting account and story item url
         formatted_text.append(
             f"@{self._story_item.owner_username}",
-            type=MESSAGEENTITY_TEXT_LINK,
+            type=MessageEntityType.TEXT_LINK,
             url=f"https://instagram.com/{self._story_item.owner_username}/",
         )
         formatted_text.append(
@@ -223,7 +219,7 @@ class StoryItemCaptions:
                 ):
                     if mention_occurrence not in mention_occurrences:
                         formatted_text.add_entity(
-                            type=MESSAGEENTITY_TEXT_LINK,
+                            type=MessageEntityType.TEXT_LINK,
                             offset=utf16len(formatted_text.text[0:mention_occurrence]),
                             length=utf16len(f"@{caption_mention}"),
                             url=f"https://instagram.com/{caption_mention}/",
@@ -240,7 +236,7 @@ class StoryItemCaptions:
                 ):
                     if hashtag_occurrence not in hashtag_occurrences:
                         formatted_text.add_entity(
-                            type=MESSAGEENTITY_TEXT_LINK,
+                            type=MessageEntityType.TEXT_LINK,
                             offset=utf16len(formatted_text.text[0:hashtag_occurrence]),
                             length=utf16len(f"#{caption_hashtag}"),
                             url=f"https://instagram.com/explore/tags/{caption_hashtag}/",
@@ -267,7 +263,7 @@ class ProfileCaptions:
         # URL to profile picture
         formatted_text.append(
             "Profile Picture",
-            type=MESSAGEENTITY_TEXT_LINK,
+            type=MessageEntityType.TEXT_LINK,
             url=self._profile.profile_pic_url,
         )
         formatted_text.append("\n")
@@ -275,7 +271,7 @@ class ProfileCaptions:
         # Profile username and ID
         formatted_text.append(
             f"@{self._profile.username}",
-            type=MESSAGEENTITY_TEXT_LINK,
+            type=MessageEntityType.TEXT_LINK,
             url=f"https://instagram.com/{self._profile.username}/",
         )
         formatted_text.append(f" ({self._profile.userid})\n")
@@ -288,7 +284,7 @@ class ProfileCaptions:
         # Follower count
         formatted_text.append(
             f"{self._profile.followers}",
-            type=MESSAGEENTITY_TEXT_LINK,
+            type=MessageEntityType.TEXT_LINK,
             url=f"https://instagram.com/{self._profile.username}/followers/",
         )
         formatted_text.append(" follower")
@@ -298,7 +294,7 @@ class ProfileCaptions:
         # Following count
         formatted_text.append(
             f"{self._profile.followees}",
-            type=MESSAGEENTITY_TEXT_LINK,
+            type=MessageEntityType.TEXT_LINK,
             url=f"https://instagram.com/{self._profile.username}/following/",
         )
         formatted_text.append(" following\n")
@@ -307,7 +303,7 @@ class ProfileCaptions:
         if self._profile.igtvcount > 0:
             formatted_text.append(
                 f"{self._profile.igtvcount}",
-                type=MESSAGEENTITY_TEXT_LINK,
+                type=MessageEntityType.TEXT_LINK,
                 url=f"https://instagram.com/{self._profile.username}/channel/",
             )
             formatted_text.append(" IGTV post")
@@ -316,13 +312,13 @@ class ProfileCaptions:
             formatted_text.append("\n")
 
         # Full name
-        formatted_text.append(f"{self._profile.full_name}", type=MESSAGEENTITY_BOLD)
+        formatted_text.append(f"{self._profile.full_name}", type=MessageEntityType.BOLD)
         formatted_text.append("\n")
 
         # Business account
         if self._profile.is_business_account:
             formatted_text.append(
-                f"{self._profile.business_category_name}", type=MESSAGEENTITY_ITALIC
+                f"{self._profile.business_category_name}", type=MessageEntityType.ITALIC
             )
             formatted_text.append("\n")
 
@@ -346,7 +342,7 @@ class ProfileCaptions:
                 ):
                     if mention_occurrence not in mention_occurrences:
                         formatted_text.add_entity(
-                            type=MESSAGEENTITY_TEXT_LINK,
+                            type=MessageEntityType.TEXT_LINK,
                             offset=utf16len(formatted_text.text[0:mention_occurrence]),
                             length=utf16len(f"@{caption_mention}"),
                             url=f"https://instagram.com/{caption_mention}/",
@@ -363,7 +359,7 @@ class ProfileCaptions:
                 ):
                     if hashtag_occurrence not in hashtag_occurrences:
                         formatted_text.add_entity(
-                            type=MESSAGEENTITY_TEXT_LINK,
+                            type=MessageEntityType.TEXT_LINK,
                             offset=utf16len(formatted_text.text[0:hashtag_occurrence]),
                             length=utf16len(f"#{caption_hashtag}"),
                             url=f"https://instagram.com/explore/tags/{caption_hashtag}/",
@@ -375,7 +371,7 @@ class ProfileCaptions:
             if self._profile.biography is not None:
                 formatted_text.append("\n")
             formatted_text.append(
-                f"{self._profile.external_url}", type=MESSAGEENTITY_BOLD
+                f"{self._profile.external_url}", type=MessageEntityType.BOLD
             )
             formatted_text.append("\n")
 
