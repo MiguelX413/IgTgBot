@@ -47,10 +47,10 @@ class PostCaptions:
         formatted_text.append(
             f"@{self._post.owner_username}",
             type=MessageEntityType.TEXT_LINK,
-            url=f"https://instagram.com/{self._post.owner_username}/",
+            url=f"https://instagram.com/{self._post.owner_username}",
         )
         formatted_text.append(
-            f" ({self._post.owner_id}): https://instagram.com/p/{self._post.shortcode}/"
+            f" ({self._post.owner_id}): https://instagram.com/p/{self._post.shortcode}"
         )
         if counter is not None:
             formatted_text.append(f" {counter + 1}/{self._post.mediacount}")
@@ -68,7 +68,7 @@ class PostCaptions:
                 formatted_text.append(
                     f"@{sponsor_user.username}",
                     type=MessageEntityType.TEXT_LINK,
-                    url=f"https://instagram.com/{sponsor_user.username}/",
+                    url=f"https://instagram.com/{sponsor_user.username}",
                 )
                 formatted_text.append(f" ({sponsor_user.userid})")
 
@@ -82,7 +82,7 @@ class PostCaptions:
                 formatted_text.append(
                     f"@{tagged_user.username}",
                     type=MessageEntityType.TEXT_LINK,
-                    url=f"https://instagram.com/{tagged_user.username}/",
+                    url=f"https://instagram.com/{tagged_user.username}",
                 )
                 formatted_text.append(f" ({tagged_user.id})")
             formatted_text.append("\n")
@@ -93,7 +93,7 @@ class PostCaptions:
             formatted_text.append(
                 f"{self._post.location.name}",
                 type=MessageEntityType.TEXT_LINK,
-                url=f"https://instagram.com/explore/locations/{self._post.location.id}/",
+                url=f"https://instagram.com/explore/locations/{self._post.location.id}",
             )
             formatted_text.append("\n")
 
@@ -104,7 +104,7 @@ class PostCaptions:
         formatted_text.append(
             f"{self._post.likes}",
             type=MessageEntityType.TEXT_LINK,
-            url=f"https://instagram.com/p/{self._post.shortcode}/liked_by/",
+            url=f"https://instagram.com/p/{self._post.shortcode}/liked_by",
         )
         formatted_text.append(f" {emojis['comments']}{self._post.comments}\n")
 
@@ -136,7 +136,7 @@ class PostCaptions:
                             type=MessageEntityType.TEXT_LINK,
                             offset=utf16len(formatted_text.text[0:mention_occurrence]),
                             length=utf16len(f"@{caption_mention}"),
-                            url=f"https://instagram.com/{caption_mention}/",
+                            url=f"https://instagram.com/{caption_mention}",
                         )
                     mention_occurrences.add(mention_occurrence)
 
@@ -153,7 +153,7 @@ class PostCaptions:
                             type=MessageEntityType.TEXT_LINK,
                             offset=utf16len(formatted_text.text[0:hashtag_occurrence]),
                             length=utf16len(f"#{caption_hashtag}"),
-                            url=f"https://instagram.com/explore/tags/{caption_hashtag}/",
+                            url=f"https://instagram.com/explore/tags/{caption_hashtag}",
                         )
                     hashtag_occurrences.add(hashtag_occurrence)
 
@@ -186,11 +186,11 @@ class StoryItemCaptions:
         formatted_text.append(
             f"@{self._story_item.owner_username}",
             type=MessageEntityType.TEXT_LINK,
-            url=f"https://instagram.com/{self._story_item.owner_username}/",
+            url=f"https://instagram.com/{self._story_item.owner_username}",
         )
         formatted_text.append(
             f" ({self._story_item.owner_id}): https://instagram.com"
-            f"/stories/{self._story_item.owner_username}/{self._story_item.mediaid}/"
+            f"/stories/{self._story_item.owner_username}/{self._story_item.mediaid}"
         )
         formatted_text.append("\n")
 
@@ -222,7 +222,7 @@ class StoryItemCaptions:
                             type=MessageEntityType.TEXT_LINK,
                             offset=utf16len(formatted_text.text[0:mention_occurrence]),
                             length=utf16len(f"@{caption_mention}"),
-                            url=f"https://instagram.com/{caption_mention}/",
+                            url=f"https://instagram.com/{caption_mention}",
                         )
                     mention_occurrences.add(mention_occurrence)
 
@@ -239,7 +239,7 @@ class StoryItemCaptions:
                             type=MessageEntityType.TEXT_LINK,
                             offset=utf16len(formatted_text.text[0:hashtag_occurrence]),
                             length=utf16len(f"#{caption_hashtag}"),
-                            url=f"https://instagram.com/explore/tags/{caption_hashtag}/",
+                            url=f"https://instagram.com/explore/tags/{caption_hashtag}",
                         )
                     hashtag_occurrences.add(hashtag_occurrence)
 
@@ -272,7 +272,7 @@ class ProfileCaptions:
         formatted_text.append(
             f"@{self._profile.username}",
             type=MessageEntityType.TEXT_LINK,
-            url=f"https://instagram.com/{self._profile.username}/",
+            url=f"https://instagram.com/{self._profile.username}",
         )
         formatted_text.append(f" ({self._profile.userid})\n")
 
@@ -285,7 +285,7 @@ class ProfileCaptions:
         formatted_text.append(
             f"{self._profile.followers}",
             type=MessageEntityType.TEXT_LINK,
-            url=f"https://instagram.com/{self._profile.username}/followers/",
+            url=f"https://instagram.com/{self._profile.username}/followers",
         )
         formatted_text.append(" follower")
         if self._profile.followers > 1:
@@ -295,7 +295,7 @@ class ProfileCaptions:
         formatted_text.append(
             f"{self._profile.followees}",
             type=MessageEntityType.TEXT_LINK,
-            url=f"https://instagram.com/{self._profile.username}/following/",
+            url=f"https://instagram.com/{self._profile.username}/following",
         )
         formatted_text.append(" following\n")
 
@@ -304,7 +304,7 @@ class ProfileCaptions:
             formatted_text.append(
                 f"{self._profile.igtvcount}",
                 type=MessageEntityType.TEXT_LINK,
-                url=f"https://instagram.com/{self._profile.username}/channel/",
+                url=f"https://instagram.com/{self._profile.username}/channel",
             )
             formatted_text.append(" IGTV post")
             if self._profile.igtvcount > 1:
@@ -345,7 +345,7 @@ class ProfileCaptions:
                             type=MessageEntityType.TEXT_LINK,
                             offset=utf16len(formatted_text.text[0:mention_occurrence]),
                             length=utf16len(f"@{caption_mention}"),
-                            url=f"https://instagram.com/{caption_mention}/",
+                            url=f"https://instagram.com/{caption_mention}",
                         )
                     mention_occurrences.add(mention_occurrence)
 
@@ -362,7 +362,7 @@ class ProfileCaptions:
                             type=MessageEntityType.TEXT_LINK,
                             offset=utf16len(formatted_text.text[0:hashtag_occurrence]),
                             length=utf16len(f"#{caption_hashtag}"),
-                            url=f"https://instagram.com/explore/tags/{caption_hashtag}/",
+                            url=f"https://instagram.com/explore/tags/{caption_hashtag}",
                         )
                     hashtag_occurrences.add(hashtag_occurrence)
 
