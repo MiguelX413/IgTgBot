@@ -1,2 +1,2 @@
-instaloader~=4.9.6
-python-telegram-bot[http2]~=20.2
+instaloader~=4.10
+python-telegram-bot[http2]~=20.4
