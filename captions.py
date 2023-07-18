@@ -23,7 +23,9 @@ class PostCaptions:
     def __init__(self, post: PatchedPost) -> None:
         self._post = post
 
-    def long_caption(self, counter: Optional[int] = None) -> FormattedText:
+    def long_caption(
+        self, counter: Optional[int] = None, location: bool = True
+    ) -> FormattedText:
         """Create a FormattedText object from a given post"""
         # Initializing
         formatted_text = FormattedText()
@@ -88,7 +90,8 @@ class PostCaptions:
             formatted_text.append("\n")
 
         # Location
-        if self._post.location is not None:
+        # Short-circuit evaluation is important here
+        if location and self._post.location is not None:
             formatted_text.append(emojis["location"])
             formatted_text.append(
                 f"{self._post.location.name}",
@@ -159,8 +162,10 @@ class PostCaptions:
 
         return formatted_text
 
-    def short_caption(self, counter: Optional[int] = None) -> FormattedText:
-        return shorten_formatted_text(self.long_caption(counter))
+    def short_caption(
+        self, counter: Optional[int] = None, location: bool = True
+    ) -> FormattedText:
+        return shorten_formatted_text(self.long_caption(counter, location))
 
 
 class StoryItemCaptions:

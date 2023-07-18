@@ -4,7 +4,7 @@ from types import TracebackType
 from typing import List, Optional, Set, Type, Union
 from uuid import uuid4
 
-from instaloader import Instaloader
+from instaloader import Instaloader, ConnectionException
 from telegram import (
     InlineQueryResult,
     InlineQueryResultArticle,
@@ -22,6 +22,7 @@ from telegram.constants import MessageLimit
 from telegram.ext import CallbackContext
 
 from captions import PostCaptions, ProfileCaptions, StoryItemCaptions
+from formatted_text import shorten_formatted_text
 from instaloader_patches import PatchedPost, PatchedProfile, PatchedStoryItem
 
 MAX_CAPTION_LENGTH = MessageLimit.CAPTION_LENGTH
@@ -96,8 +97,24 @@ class InstagramHandler:
         )
         logging.info(str(post.__dict__))
         results: List[InlineQueryResult] = []
+
+        post_captions = PostCaptions(post)
+        try:
+            long = post_captions.long_caption()
+        except ConnectionException as e:
+            results.append(
+                InlineQueryResultArticle(
+                    id=str(uuid4()),
+                    title="Exception",
+                    description="Error message",
+                    input_message_content=InputTextMessageContent(
+                        "Got a ConnectionException, going to attempt to ignore location"
+                    ),
+                )
+            )
+            long = post_captions.long_caption(location=False)
+
         if post.typename == "GraphSidecar":
-            post_captions = PostCaptions(post)
             for counter, node in enumerate(post.get_sidecar_nodes()):
                 short = post_captions.short_caption(counter)
                 if node.is_video is True:
@@ -137,8 +154,7 @@ class InstagramHandler:
                 )
 
         else:
-            post_captions = PostCaptions(post)
-            short = post_captions.short_caption()
+            short = shorten_formatted_text(long)
             if (post.typename == "GraphVideo") and (post.video_url is not None):
                 results.append(
                     InlineQueryResultVideo(
@@ -207,8 +223,17 @@ class InstagramHandler:
         )
         logging.info(str(post.__dict__))
 
+        post_captions = PostCaptions(post)
+        try:
+            long = post_captions.long_caption()
+        except ConnectionException as e:
+            await update.message.reply_text(
+                "Got a ConnectionException, going to attempt to ignore location",
+                quote=True,
+            )
+            long = post_captions.long_caption(location=False)
+
         if post.typename == "GraphSidecar":
-            post_captions = PostCaptions(post)
             media_group: List[
                 Union[
                     InputMediaAudio,
@@ -245,8 +270,7 @@ class InstagramHandler:
             )[-1]
 
         else:
-            post_captions = PostCaptions(post)
-            short = post_captions.short_caption()
+            short = shorten_formatted_text(long)
             if (post.typename == "GraphVideo") and (post.video_url is not None):
                 media_reply = await update.message.reply_video(
                     video=post.video_url,
@@ -269,7 +293,6 @@ class InstagramHandler:
                     caption_entities=short.entities,
                 )
 
-        long = post_captions.long_caption()
         if (media_reply is not None) and (
             (len(long) > MAX_CAPTION_LENGTH)
             or (
