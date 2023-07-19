@@ -99,6 +99,7 @@ class InstagramHandler:
         results: List[InlineQueryResult] = []
 
         post_captions = PostCaptions(post)
+        location_problems = False
         try:
             long = post_captions.long_caption()
         except ConnectionException as e:
@@ -113,10 +114,13 @@ class InstagramHandler:
                 )
             )
             long = post_captions.long_caption(location=False)
+            location_problems = True
 
         if post.typename == "GraphSidecar":
             for counter, node in enumerate(post.get_sidecar_nodes()):
-                short = post_captions.short_caption(counter)
+                short = post_captions.short_caption(
+                    counter, location=not location_problems
+                )
                 if node.is_video is True:
                     results.append(
                         InlineQueryResultVideo(
@@ -224,6 +228,7 @@ class InstagramHandler:
         logging.info(str(post.__dict__))
 
         post_captions = PostCaptions(post)
+        location_problems = False
         try:
             long = post_captions.long_caption()
         except ConnectionException as e:
@@ -232,6 +237,7 @@ class InstagramHandler:
                 quote=True,
             )
             long = post_captions.long_caption(location=False)
+            location_problems = True
 
         if post.typename == "GraphSidecar":
             media_group: List[
@@ -243,7 +249,9 @@ class InstagramHandler:
                 ]
             ] = []
             for counter, node in enumerate(post.get_sidecar_nodes()):
-                short = post_captions.short_caption(counter)
+                short = post_captions.short_caption(
+                    counter, location=not location_problems
+                )
                 if node.is_video is True:
                     media_group.append(
                         InputMediaVideo(
@@ -297,7 +305,10 @@ class InstagramHandler:
             (len(long) > MAX_CAPTION_LENGTH)
             or (
                 (post.typename == "GraphSidecar")
-                and (len(post_captions.long_caption(0)) > MAX_CAPTION_LENGTH)
+                and (
+                    len(post_captions.long_caption(0, location=not location_problems))
+                    > MAX_CAPTION_LENGTH
+                )
             )
         ):
             await media_reply.reply_text(long.text, entities=long.entities, quote=True)
