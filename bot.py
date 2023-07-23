@@ -25,11 +25,10 @@ def bot(
     token: str,
     ig_user: Optional[str],
     whitelist: Optional[Set[int]],
-    instaloader_iphone_support: bool = True,
 ) -> None:
-    with InstagramHandler(
-        ig_user, whitelist, iphone_support=instaloader_iphone_support
-    ) as instagram_handler, ErrorHandler(whitelist) as error_handler:
+    with InstagramHandler(ig_user, whitelist) as instagram_handler, ErrorHandler(
+        whitelist
+    ) as error_handler:
         application = Application.builder().token(token).build()
 
         application.add_error_handler(error_handler.error_handler)
@@ -99,12 +98,6 @@ def main() -> None:
         help="Disables rich output",
     )
     parser.add_argument(
-        "--no-iphone",
-        action="store_false",
-        dest="iphone",
-        help="Passes --no-iphone to instaloader",
-    )
-    parser.add_argument(
         "--log-file",
         action="store_true",
         dest="logfile",
@@ -156,7 +149,6 @@ def main() -> None:
         os.environ.get("TG_TOKEN") if "TG_TOKEN" in os.environ else args.token,
         args.ig_user,
         user_whitelist,
-        instaloader_iphone_support=args.iphone,
     )
 
 

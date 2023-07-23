@@ -4,7 +4,7 @@ from types import TracebackType
 from typing import List, Optional, Set, Type, Union
 from uuid import uuid4
 
-from instaloader import Instaloader, ConnectionException
+from instagrapi import Client
 from telegram import (
     InlineQueryResult,
     InlineQueryResultArticle,
@@ -21,38 +21,32 @@ from telegram import (
 from telegram.constants import MessageLimit
 from telegram.ext import CallbackContext
 
-from captions import PostCaptions, ProfileCaptions, StoryItemCaptions
+from captions import MediaCaptions, UserCaptions, StoryCaptions
 from formatted_text import shorten_formatted_text
-from instaloader_patches import PatchedPost, PatchedProfile, PatchedStoryItem
+from login import login_user
 
 MAX_CAPTION_LENGTH = MessageLimit.CAPTION_LENGTH
 
 
 class InstagramHandler:
-    instaloader: Instaloader
+    client: Client
     whitelist: Optional[Set[int]]
 
     def __init__(
         self,
         ig_user: Optional[str],
         whitelist: Optional[Set[int]],
-        iphone_support: bool = True,
+        delay_range: Optional[List[int]] = None,
     ) -> None:
         self.whitelist = whitelist
 
-        self.instaloader = Instaloader(iphone_support=iphone_support)
-        if ig_user is not None:
-            try:
-                self.instaloader.load_session_from_file(username=ig_user)
-            except FileNotFoundError:
-                self.instaloader.interactive_login(ig_user)
-            self.instaloader.save_session_to_file()
+        self.client = Client()
+
+        login_user(self.client, ig_user)
+        self.client.delay_range = [1, 3] if delay_range is None else delay_range
 
     def __enter__(self):
         return self
-
-    def close(self) -> None:
-        return self.instaloader.close()
 
     def __exit__(
         self,
@@ -60,7 +54,8 @@ class InstagramHandler:
         exc_val: Optional[BaseException],
         exc_tb: Optional[TracebackType],
     ) -> None:
-        return self.close()
+        """Legacy code"""
+        return None
 
     async def inlinequery(self, update: Update, context: CallbackContext) -> None:
         """Produces results for Inline Queries"""
@@ -92,42 +87,23 @@ class InstagramHandler:
             return
 
         shortcode: str = update.inline_query.query
-        post: PatchedPost = PatchedPost.from_shortcode(
-            self.instaloader.context, shortcode
-        )
-        logging.info(str(post.__dict__))
+        media = self.client.media_info(self.client.media_pk_from_code(shortcode))
+        logging.info(str(media.__dict__))
         results: List[InlineQueryResult] = []
 
-        post_captions = PostCaptions(post)
-        location_problems = False
-        try:
-            long = post_captions.long_caption()
-        except ConnectionException as e:
-            results.append(
-                InlineQueryResultArticle(
-                    id=str(uuid4()),
-                    title="Exception",
-                    description="Error message",
-                    input_message_content=InputTextMessageContent(
-                        "Got a ConnectionException, going to attempt to ignore location"
-                    ),
-                )
-            )
-            long = post_captions.long_caption(location=False)
-            location_problems = True
+        post_captions = MediaCaptions(media)
+        long = post_captions.long_caption()
 
-        if post.typename == "GraphSidecar":
-            for counter, node in enumerate(post.get_sidecar_nodes()):
-                short = post_captions.short_caption(
-                    counter, location=not location_problems
-                )
-                if node.is_video is True:
+        if media.media_type == 8:  # Album
+            for counter, node in enumerate(media.resources):
+                short = post_captions.short_caption(counter)
+                if node.video_url is not None:
                     results.append(
                         InlineQueryResultVideo(
                             id=str(uuid4()),
                             video_url=node.video_url,
                             mime_type="video/mp4",
-                            thumb_url=node.display_url,
+                            thumb_url=node.thumbnail_url,
                             title="Video",
                             caption=short.text,
                             caption_entities=short.entities,
@@ -138,8 +114,8 @@ class InstagramHandler:
                     results.append(
                         InlineQueryResultPhoto(
                             id=str(uuid4()),
-                            photo_url=node.display_url,
-                            thumb_url=node.display_url,
+                            photo_url=node.thumbnail_url,
+                            thumb_url=node.thumbnail_url,
                             title="Photo",
                             caption=short.text,
                             caption_entities=short.entities,
@@ -153,19 +129,19 @@ class InstagramHandler:
                             short.text,
                             entities=short.entities,
                         ),
-                        thumb_url=node.display_url,
+                        thumb_url=node.thumbnail_url,
                     )
                 )
 
         else:
             short = shorten_formatted_text(long)
-            if (post.typename == "GraphVideo") and (post.video_url is not None):
+            if (media.media_type == 2) and (media.video_url is not None):
                 results.append(
                     InlineQueryResultVideo(
                         id=str(uuid4()),
                         title="Video",
-                        video_url=post.video_url,
-                        thumb_url=post.url,
+                        video_url=media.video_url,
+                        thumb_url=media.thumbnail_url,
                         mime_type="video/mp4",
                         caption=short.text,
                         caption_entities=short.entities,
@@ -177,8 +153,8 @@ class InstagramHandler:
                     InlineQueryResultPhoto(
                         id=str(uuid4()),
                         title="Photo",
-                        photo_url=post.url,
-                        thumb_url=post.url,
+                        photo_url=media.thumbnail_url,
+                        thumb_url=media.thumbnail_url,
                         caption=short.text,
                         caption_entities=short.entities,
                     )
@@ -191,7 +167,7 @@ class InstagramHandler:
                         short.text,
                         entities=short.entities,
                     ),
-                    thumb_url=post.url,
+                    thumb_url=media.thumbnail_url,
                 )
             )
         await update.inline_query.answer(results, cache_time=21600, is_personal=False)
@@ -222,24 +198,13 @@ class InstagramHandler:
         if not is_ig_post:
             await update.message.reply_text("Not an Instagram post", quote=True)
             return
-        post: PatchedPost = PatchedPost.from_shortcode(
-            self.instaloader.context, shortcode
-        )
-        logging.info(str(post.__dict__))
+        media = self.client.media_info(self.client.media_pk_from_code(shortcode))
+        logging.info(str(media.__dict__))
 
-        post_captions = PostCaptions(post)
-        location_problems = False
-        try:
-            long = post_captions.long_caption()
-        except ConnectionException as e:
-            await update.message.reply_text(
-                "Got a ConnectionException, going to attempt to ignore location",
-                quote=True,
-            )
-            long = post_captions.long_caption(location=False)
-            location_problems = True
+        post_captions = MediaCaptions(media)
+        long = post_captions.long_caption()
 
-        if post.typename == "GraphSidecar":
+        if media.media_type == 8:  # Album
             media_group: List[
                 Union[
                     InputMediaAudio,
@@ -248,11 +213,9 @@ class InstagramHandler:
                     InputMediaVideo,
                 ]
             ] = []
-            for counter, node in enumerate(post.get_sidecar_nodes()):
-                short = post_captions.short_caption(
-                    counter, location=not location_problems
-                )
-                if node.is_video is True:
+            for counter, node in enumerate(media.resources):
+                short = post_captions.short_caption(counter)
+                if node.video_url is not None:
                     media_group.append(
                         InputMediaVideo(
                             media=node.video_url,
@@ -263,7 +226,7 @@ class InstagramHandler:
                 else:
                     media_group.append(
                         InputMediaPhoto(
-                            media=node.display_url,
+                            media=node.thumbnail_url,
                             caption=short.text,
                             caption_entities=short.entities,
                         )
@@ -279,23 +242,23 @@ class InstagramHandler:
 
         else:
             short = shorten_formatted_text(long)
-            if (post.typename == "GraphVideo") and (post.video_url is not None):
+            if (media.media_type == 2) and (media.video_url is not None):
                 media_reply = await update.message.reply_video(
-                    video=post.video_url,
+                    video=media.video_url,
                     quote=True,
                     caption=short.text,
                     caption_entities=short.entities,
                 )
 
             else:
-                if post.typename != "GraphImage":
-                    logging.info("Post type irregular: %s", post.typename)
+                if media.media_type != 1:
+                    logging.info("Post type irregular: %s", media.media_type)
                     await update.message.reply_text(
-                        f"Invalid type: {post.typename}, will try to send as image.",
+                        f"Invalid type: {media.media_type}, will try to send as image.",
                         quote=True,
                     )
                 media_reply = await update.message.reply_photo(
-                    photo=post.url,
+                    photo=media.thumbnail_url,
                     quote=True,
                     caption=short.text,
                     caption_entities=short.entities,
@@ -304,11 +267,8 @@ class InstagramHandler:
         if (media_reply is not None) and (
             (len(long) > MAX_CAPTION_LENGTH)
             or (
-                (post.typename == "GraphSidecar")
-                and (
-                    len(post_captions.long_caption(0, location=not location_problems))
-                    > MAX_CAPTION_LENGTH
-                )
+                (media.media_type == 8)  # Album
+                and (len(post_captions.long_caption(0)) > MAX_CAPTION_LENGTH)
             )
         ):
             await media_reply.reply_text(long.text, entities=long.entities, quote=True)
@@ -344,14 +304,12 @@ class InstagramHandler:
         if not is_ig_story_item:
             await update.message.reply_text("Not an Instagram story item", quote=True)
             return
-        story_item: PatchedStoryItem = PatchedStoryItem.from_mediaid(
-            self.instaloader.context, media_id
-        )
+        story_item = self.client.story_info(str(media_id))
         logging.info(str(story_item.__dict__))
 
-        story_item_captions = StoryItemCaptions(story_item)
+        story_item_captions = StoryCaptions(story_item)
         short = story_item_captions.short_caption()
-        if story_item.is_video and (story_item.video_url is not None):
+        if (story_item.media_type == 2) and (story_item.video_url is not None):
             first_reply = await update.message.reply_video(
                 video=story_item.video_url,
                 quote=True,
@@ -361,7 +319,7 @@ class InstagramHandler:
 
         else:
             first_reply = await update.message.reply_photo(
-                photo=story_item.url,
+                photo=story_item.thumbnail_url,
                 quote=True,
                 caption=short.text,
                 caption_entities=short.entities,
@@ -370,7 +328,9 @@ class InstagramHandler:
         if len(long.text) > MAX_CAPTION_LENGTH:
             await first_reply.reply_text(long.text, entities=long.entities, quote=True)
 
-    async def profile(self, update: Update, context: CallbackContext) -> None:
+    async def _profile(
+        self, update: Update, context: CallbackContext, is_id: bool
+    ) -> None:
         """Returns Instagram profiles"""
         logging.info(str(update.message))
 
@@ -389,20 +349,22 @@ class InstagramHandler:
                 "Please run the command with a profile username.", quote=True
             )
             return
-        profile_username: str = context.args[0]
+        id_or_username = context.args[0]
         is_ig_profile: bool = True
         if not is_ig_profile:
             await update.message.reply_text("Not an Instagram profile", quote=True)
             return
-        profile: PatchedProfile = PatchedProfile.from_username(
-            self.instaloader.context, profile_username
+        user = (
+            self.client.user_info(id_or_username)
+            if is_id
+            else self.client.user_info_by_username(id_or_username)
         )
-        logging.info(str(profile.__dict__))
+        logging.info(str(user.__dict__))
 
-        profile_captions = ProfileCaptions(profile)
+        profile_captions = UserCaptions(user)
         short = profile_captions.short_caption()
         first_reply = await update.message.reply_photo(
-            photo=profile.profile_pic_url,
+            photo=user.profile_pic_url,
             quote=True,
             caption=short.text,
             caption_entities=short.entities,
@@ -410,51 +372,11 @@ class InstagramHandler:
         long = profile_captions.long_caption()
         if len(long.text) > MAX_CAPTION_LENGTH:
             await first_reply.reply_text(long.text, entities=long.entities, quote=True)
+
+    async def profile(self, update: Update, context: CallbackContext) -> None:
+        """Returns Instagram profiles"""
+        return await self._profile(update, context, is_id=False)
 
     async def profile_id(self, update: Update, context: CallbackContext) -> None:
         """Returns Instagram profiles"""
-        logging.info(str(update.message))
-
-        if update.message is None:
-            raise ValueError("Expected update.message to not be None.")
-
-        if (
-            (self.whitelist is not None)
-            and (update.message.from_user is not None)
-            and (update.message.from_user.id not in self.whitelist)
-        ):
-            await update.message.reply_text("Unauthorized user", quote=True)
-            return
-        if (context.args is None) or (len(context.args) < 1):
-            await update.message.reply_text(
-                "Please run the command with a profile ID.", quote=True
-            )
-            return
-
-        try:
-            profile_id: int = int(context.args[0])
-        except ValueError:
-            await update.message.reply_text("Invalid profile ID.", quote=True)
-            return
-
-        is_ig_profile: bool = True
-        if not is_ig_profile:
-            await update.message.reply_text("Not an Instagram profile", quote=True)
-            return
-
-        profile: PatchedProfile = PatchedProfile.from_id(
-            self.instaloader.context, profile_id
-        )
-        logging.info(str(profile.__dict__))
-
-        profile_captions = ProfileCaptions(profile)
-        short = profile_captions.short_caption()
-        first_reply = await update.message.reply_photo(
-            photo=profile.profile_pic_url,
-            quote=True,
-            caption=short.text,
-            caption_entities=short.entities,
-        )
-        long = profile_captions.long_caption()
-        if len(long.text) > MAX_CAPTION_LENGTH:
-            await first_reply.reply_text(long.text, entities=long.entities, quote=True)
+        return await self._profile(update, context, is_id=True)

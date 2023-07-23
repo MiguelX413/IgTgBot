@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from typing import NamedTuple, Optional, Set
-from unicodedata import normalize
+from unicodedata import normalize as _uni_normalize
 
 
 # def parse_for_shortcodes(text: str) -> List[str]:
@@ -22,17 +22,14 @@ def find_occurrences(string: str, substring: str) -> Set[int]:
     return offsets
 
 
+def normalize(string: str) -> str:
+    """Return a normalized string"""
+    return _uni_normalize("NFC", string)
+
+
 def optional_normalize(string: Optional[str]) -> Optional[str]:
     """Return a normalized string or None if input is None"""
     if string is not None:
-        return normalize("NFC", string)
+        return normalize(string)
     else:
         return None
-
-
-class TaggedUser(NamedTuple):
-    full_name: str
-    id: int
-    is_verified: bool
-    profile_pic_url: str
-    username: str
