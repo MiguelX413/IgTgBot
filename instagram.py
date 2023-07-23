@@ -42,7 +42,9 @@ class InstagramHandler:
 
         self.client = Client()
 
-        login_user(self.client, ig_user)
+        if ig_user is not None:
+            login_user(self.client, ig_user)
+
         self.client.delay_range = [1, 3] if delay_range is None else delay_range
 
     def __enter__(self):
