@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import NamedTuple, Optional, Set
+from typing import Optional, Set
 from unicodedata import normalize as _uni_normalize
 
 

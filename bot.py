@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import logging
 import os
-from typing import List, Optional, Set, Type
+from typing import List, Optional, Set
 
 from telegram import Update
 from telegram.ext import (

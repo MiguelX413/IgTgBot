@@ -3,12 +3,11 @@ Copied from
 https://github.com/adw0rd/instagrapi/blob/abea0b7cf584f08852a1d3b23c97555c9731a428/docs/usage-guide/best-practices.md?plain=1#L89-L138
 """
 
+import logging
 from pathlib import Path
-from typing import Callable
 
 from instagrapi import Client
 from instagrapi.exceptions import LoginRequired
-import logging
 
 logger = logging.getLogger()
 
