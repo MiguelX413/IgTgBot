@@ -130,7 +130,9 @@ class MediaCaptions:
             # Mentions in caption
             mention_occurrences: Set[int] = set()
             for caption_mention in sorted(
-                set(caption_mentions(self._media.caption_text)), key=len, reverse=True
+                set(caption_mentions(self._media.caption_text.lower())),
+                key=len,
+                reverse=True,
             ):
                 for mention_occurrence in find_occurrences(
                     search_caption, f"@{caption_mention}"
@@ -147,7 +149,9 @@ class MediaCaptions:
             # Hashtags in caption
             hashtag_occurrences: Set[int] = set()
             for caption_hashtag in sorted(
-                set(caption_hashtags(self._media.caption_text)), key=len, reverse=True
+                set(caption_hashtags(self._media.caption_text.lower())),
+                key=len,
+                reverse=True,
             ):
                 for hashtag_occurrence in find_occurrences(
                     search_caption, f"#{caption_hashtag}"
@@ -310,7 +314,9 @@ class UserCaptions:
             # Mentions in biography
             mention_occurrences: Set[int] = set()
             for caption_mention in sorted(
-                set(caption_mentions(self.user.biography)), key=len, reverse=True
+                set(caption_mentions(self.user.biography.lower())),
+                key=len,
+                reverse=True,
             ):
                 for mention_occurrence in find_occurrences(
                     search_caption, f"@{caption_mention}"
@@ -327,7 +333,9 @@ class UserCaptions:
             # Hashtags in biography
             hashtag_occurrences: Set[int] = set()
             for caption_hashtag in sorted(
-                set(caption_hashtags(self.user.biography)), key=len, reverse=True
+                set(caption_hashtags(self.user.biography.lower())),
+                key=len,
+                reverse=True,
             ):
                 for hashtag_occurrence in find_occurrences(
                     search_caption, f"#{caption_hashtag}"
