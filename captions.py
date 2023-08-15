@@ -118,7 +118,9 @@ class MediaCaptions:
         )
 
         # Post Caption
-        if self._media.caption_text is not None:
+        if (self._media.caption_text is not None) and (
+            len(self._media.caption_text) != 0
+        ):
             old_caption = formatted_text.text
             formatted_text.append(self._media.caption_text)
 
