@@ -70,7 +70,7 @@ class FormattedText:
         user: Optional[User] = None,
         language: Optional[str] = None,
         custom_emoji_id: Optional[str] = None,
-    ):
+    ) -> None:
         ...
 
     def append(
