@@ -105,7 +105,7 @@ class InstagramHandler:
                             id=str(uuid4()),
                             video_url=node.video_url,
                             mime_type="video/mp4",
-                            thumb_url=node.thumbnail_url,
+                            thumbnail_url=node.thumbnail_url,
                             title="Video",
                             caption=short.text,
                             caption_entities=short.entities,
@@ -117,7 +117,7 @@ class InstagramHandler:
                         InlineQueryResultPhoto(
                             id=str(uuid4()),
                             photo_url=node.thumbnail_url,
-                            thumb_url=node.thumbnail_url,
+                            thumbnail_url=node.thumbnail_url,
                             title="Photo",
                             caption=short.text,
                             caption_entities=short.entities,
@@ -131,7 +131,7 @@ class InstagramHandler:
                             short.text,
                             entities=short.entities,
                         ),
-                        thumb_url=node.thumbnail_url,
+                        thumbnail_url=node.thumbnail_url,
                     )
                 )
 
@@ -143,7 +143,7 @@ class InstagramHandler:
                         id=str(uuid4()),
                         title="Video",
                         video_url=media.video_url,
-                        thumb_url=media.thumbnail_url,
+                        thumbnail_url=media.thumbnail_url,
                         mime_type="video/mp4",
                         caption=short.text,
                         caption_entities=short.entities,
@@ -156,7 +156,7 @@ class InstagramHandler:
                         id=str(uuid4()),
                         title="Photo",
                         photo_url=media.thumbnail_url,
-                        thumb_url=media.thumbnail_url,
+                        thumbnail_url=media.thumbnail_url,
                         caption=short.text,
                         caption_entities=short.entities,
                     )
@@ -169,7 +169,7 @@ class InstagramHandler:
                         short.text,
                         entities=short.entities,
                     ),
-                    thumb_url=media.thumbnail_url,
+                    thumbnail_url=media.thumbnail_url,
                 )
             )
         await update.inline_query.answer(results, cache_time=21600, is_personal=False)
